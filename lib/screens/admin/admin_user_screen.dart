@@ -42,9 +42,13 @@ class _AdminUserScreenState extends State<AdminUserScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   TextFormField(controller: namaCtrl, decoration: const InputDecoration(labelText: 'Nama'), validator: (v) => v!.isEmpty ? 'Wajib' : null),
+                  const SizedBox(height: 16),
                   TextFormField(controller: emailCtrl, decoration: const InputDecoration(labelText: 'Email'), validator: (v) => v!.isEmpty ? 'Wajib' : null),
+                  const SizedBox(height: 16),
                   TextFormField(controller: passCtrl, decoration: InputDecoration(labelText: isEdit ? 'Password Baru (Opsional)' : 'Password'), validator: (v) => !isEdit && v!.isEmpty ? 'Wajib' : null, obscureText: true),
+                  const SizedBox(height: 16),
                   TextFormField(controller: phoneCtrl, decoration: const InputDecoration(labelText: 'Telepon')),
+                  const SizedBox(height: 16),
                   TextFormField(controller: fotoCtrl, decoration: const InputDecoration(labelText: 'URL Foto (Opsional)')),
                 ],
               ),

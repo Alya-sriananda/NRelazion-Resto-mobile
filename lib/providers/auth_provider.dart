@@ -43,6 +43,32 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  Future<bool> register(String nama, String email, String password, String telepon) async {
+    _isLoading = true;
+    _errorMessage = '';
+    notifyListeners();
+
+    final response = await _apiService.post({
+      'action': 'addUser',
+      'nama': nama,
+      'email': email,
+      'password': password,
+      'role': 'customer',
+      'telepon': telepon,
+      'foto_url': '',
+    });
+
+    _isLoading = false;
+    if (response['success'] == true) {
+      notifyListeners();
+      return true;
+    } else {
+      _errorMessage = response['message']?.toString() ?? 'Registrasi gagal';
+      notifyListeners();
+      return false;
+    }
+  }
+
   Future<void> loadSession() async {
     final prefs = await SharedPreferences.getInstance();
     final userStr = prefs.getString('user');

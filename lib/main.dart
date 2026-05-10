@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'constants/app_routes.dart';
 import 'theme/app_theme.dart';
 
+import 'screens/auth/login_screen.dart';
+import 'screens/auth/register_screen.dart';
 import 'screens/admin/admin_dashboard_screen.dart';
 import 'screens/admin/admin_meja_screen.dart';
 import 'screens/admin/admin_menu_screen.dart';
@@ -38,10 +40,12 @@ class MyApp extends StatelessWidget {
         title: 'NRelazion Resto',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
-        initialRoute: AppRoutes.adminDashboard, // Sementara kita mulai di Admin Dashboard
+        initialRoute: AppRoutes.login,
         routes: {
           AppRoutes.splash: (context) => const PlaceholderScreen(title: 'Splash Screen'),
-          AppRoutes.login: (context) => const PlaceholderScreen(title: 'Login'),
+          AppRoutes.login: (context) => const LoginScreen(),
+          AppRoutes.register: (context) => const RegisterScreen(),
+          
           // Admin
           AppRoutes.adminDashboard: (context) => const AdminDashboardScreen(),
           AppRoutes.adminMenu: (context) => const AdminMenuScreen(),

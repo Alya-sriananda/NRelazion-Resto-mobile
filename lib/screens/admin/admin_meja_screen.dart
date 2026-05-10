@@ -45,17 +45,20 @@ class _AdminMejaScreenState extends State<AdminMejaScreen> {
                     decoration: const InputDecoration(labelText: 'Area (Misal: Indoor)'),
                     validator: (v) => v!.isEmpty ? 'Wajib diisi' : null,
                   ),
+                  const SizedBox(height: 16),
                   TextFormField(
                     controller: nomorCtrl,
                     decoration: const InputDecoration(labelText: 'Nomor Meja'),
                     validator: (v) => v!.isEmpty ? 'Wajib diisi' : null,
                   ),
+                  const SizedBox(height: 16),
                   TextFormField(
                     controller: kapasitasCtrl,
                     decoration: const InputDecoration(labelText: 'Kapasitas (Kursi)'),
                     keyboardType: TextInputType.number,
                     validator: (v) => v!.isEmpty ? 'Wajib diisi' : null,
                   ),
+                  const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
                     initialValue: status,
                     decoration: const InputDecoration(labelText: 'Status'),
