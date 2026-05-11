@@ -19,7 +19,7 @@ class _AdminReportScreenState extends State<AdminReportScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<OrderProvider>().fetchOrders(status: 'selesai'); // Fetch completed orders
+      context.read<OrderProvider>().fetchOrders(); // Fetch all orders
     });
   }
 
@@ -45,7 +45,7 @@ class _AdminReportScreenState extends State<AdminReportScreen> {
       ),
       drawer: const AdminDrawer(),
       body: RefreshIndicator(
-        onRefresh: () => orderProv.fetchOrders(status: 'selesai'),
+        onRefresh: () => orderProv.fetchOrders(),
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
           child: Column(
@@ -158,7 +158,7 @@ class _AdminReportScreenState extends State<AdminReportScreen> {
                 const Text('Belum ada transaksi selesai')
               else
                 ...orderProv.orders.where((o) => o.status.toLowerCase() == 'selesai').map((o) {
-                  return _buildTransactionItem('#${o.id}', o.createdAt.isNotEmpty ? o.createdAt : '10 Mei 2026', 'Rp ${o.totalHarga}');
+                  return _buildTransactionItem(o.id.substring(0, 6).toUpperCase(), o.createdAt.isNotEmpty ? o.createdAt : '10 Mei 2026', 'Rp ${o.totalHarga}');
                 }),
             ],
           ),
@@ -200,13 +200,16 @@ class _AdminReportScreenState extends State<AdminReportScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Order $id', style: const TextStyle(fontWeight: FontWeight.bold)),
-              Text(date, style: const TextStyle(color: AppColors.gray, fontSize: 12)),
-            ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Order $id', style: const TextStyle(fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
+                Text(date, style: const TextStyle(color: AppColors.gray, fontSize: 12)),
+              ],
+            ),
           ),
+          const SizedBox(width: 12),
           Text(amount, style: const TextStyle(color: AppColors.success, fontWeight: FontWeight.bold)),
         ],
       ),

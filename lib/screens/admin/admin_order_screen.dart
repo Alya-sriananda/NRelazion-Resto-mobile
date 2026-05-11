@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../constants/app_colors.dart';
 import '../../providers/order_provider.dart';
+import '../../providers/user_provider.dart';
+import '../../providers/meja_provider.dart';
+import '../../models/order_model.dart';
 import 'admin_dashboard_screen.dart';
 
 class AdminOrderScreen extends StatefulWidget {
@@ -17,6 +20,8 @@ class _AdminOrderScreenState extends State<AdminOrderScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<OrderProvider>().fetchOrders();
+      context.read<UserProvider>().fetchUsers();
+      context.read<MejaProvider>().fetchMeja();
     });
   }
 
@@ -64,8 +69,7 @@ class _AdminOrderScreenState extends State<AdminOrderScreen> {
                     padding: const EdgeInsets.all(20),
                     itemCount: aktifList.length,
                     itemBuilder: (context, index) {
-                      final o = aktifList[index];
-                      return _buildOrderCard(o.id, o.userId, 'Meja ${o.mejaId}', 'Rp ${o.totalHarga}', AppColors.warning, o.status);
+                      return _buildOrderCard(aktifList[index], AppColors.warning);
                     },
                   ),
                 ),
@@ -76,8 +80,7 @@ class _AdminOrderScreenState extends State<AdminOrderScreen> {
                     padding: const EdgeInsets.all(20),
                     itemCount: selesaiList.length,
                     itemBuilder: (context, index) {
-                      final o = selesaiList[index];
-                      return _buildOrderCard(o.id, o.userId, 'Meja ${o.mejaId}', 'Rp ${o.totalHarga}', AppColors.success, o.status);
+                      return _buildOrderCard(selesaiList[index], AppColors.success);
                     },
                   ),
                 ),
@@ -88,8 +91,7 @@ class _AdminOrderScreenState extends State<AdminOrderScreen> {
                     padding: const EdgeInsets.all(20),
                     itemCount: batalList.length,
                     itemBuilder: (context, index) {
-                      final o = batalList[index];
-                      return _buildOrderCard(o.id, o.userId, 'Meja ${o.mejaId}', 'Rp ${o.totalHarga}', AppColors.accent, o.status);
+                      return _buildOrderCard(batalList[index], AppColors.accent);
                     },
                   ),
                 ),
@@ -101,7 +103,22 @@ class _AdminOrderScreenState extends State<AdminOrderScreen> {
     );
   }
 
-  Widget _buildOrderCard(String id, String name, String table, String total, Color statusColor, String statusText) {
+  Widget _buildOrderCard(OrderModel order, Color statusColor) {
+    final userProv = context.watch<UserProvider>();
+    final mejaProv = context.watch<MejaProvider>();
+
+    String userName = order.userId;
+    try {
+      final user = userProv.users.firstWhere((u) => u.id == order.userId);
+      userName = user.nama;
+    } catch (_) {}
+
+    String tableName = 'Meja ${order.mejaId}';
+    try {
+      final meja = mejaProv.meja.firstWhere((m) => m.id == order.mejaId);
+      tableName = 'Meja ${meja.nomor}';
+    } catch (_) {}
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -118,14 +135,14 @@ class _AdminOrderScreenState extends State<AdminOrderScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('#$id', style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary)),
+              Text('#${order.id.substring(0, 6).toUpperCase()}', style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary)),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: statusColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Text(statusText, style: TextStyle(color: statusColor, fontSize: 10, fontWeight: FontWeight.bold)),
+                child: Text(order.status, style: TextStyle(color: statusColor, fontSize: 10, fontWeight: FontWeight.bold)),
               ),
             ],
           ),
@@ -133,37 +150,43 @@ class _AdminOrderScreenState extends State<AdminOrderScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                  Text(table, style: const TextStyle(color: AppColors.gray, fontSize: 12)),
-                ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(userName, style: const TextStyle(fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
+                    Text(tableName, style: const TextStyle(color: AppColors.gray, fontSize: 12)),
+                  ],
+                ),
               ),
-              Text(total, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              const SizedBox(width: 12),
+              Text('Rp ${order.totalHarga}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
             ],
           ),
           const SizedBox(height: 12),
-          if (statusText.toLowerCase() != 'selesai' && statusText.toLowerCase() != 'batal')
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () {},
-                    child: const Text('Detail'),
-                  ),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/orderDetail', arguments: order);
+                  },
+                  child: const Text('Detail'),
                 ),
+              ),
+              if (order.status.toLowerCase() != 'selesai' && order.status.toLowerCase() != 'batal') ...[
                 const SizedBox(width: 8),
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () {
-                      context.read<OrderProvider>().updateOrderStatus(id, 'Selesai');
+                      context.read<OrderProvider>().updateOrderStatus(order.id, 'Selesai');
                     },
                     child: const Text('Selesaikan'),
                   ),
                 ),
               ],
-            ),
+            ],
+          ),
         ],
       ),
     );

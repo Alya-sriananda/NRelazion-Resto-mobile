@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../constants/app_colors.dart';
 import '../../providers/order_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/meja_provider.dart';
 import '../../models/order_model.dart';
 import 'package:intl/intl.dart';
 
@@ -21,6 +22,7 @@ class _CustomerHistoryScreenState extends State<CustomerHistoryScreen> {
       final userId = context.read<AuthProvider>().currentUser?.id;
       if (userId != null) {
         context.read<OrderProvider>().fetchOrders();
+        context.read<MejaProvider>().fetchMeja();
       }
     });
   }
@@ -65,77 +67,93 @@ class _CustomerHistoryScreenState extends State<CustomerHistoryScreen> {
   }
 
   Widget _buildOrderCard(OrderModel order) {
+    final mejaProv = context.watch<MejaProvider>();
+    String tableName = 'Meja ${order.mejaId}';
+    try {
+      final meja = mejaProv.meja.firstWhere((m) => m.id == order.mejaId);
+      tableName = 'Meja ${meja.nomor}';
+    } catch (_) {}
+
     Color statusColor;
-    switch (order.status) {
-      case 'Selesai': statusColor = AppColors.success; break;
-      case 'Dibatalkan': statusColor = AppColors.accent; break;
-      case 'Diproses': statusColor = AppColors.warning; break;
+    switch (order.status.toLowerCase()) {
+      case 'selesai': statusColor = AppColors.success; break;
+      case 'dibatalkan': case 'batal': statusColor = AppColors.accent; break;
+      case 'diproses': statusColor = AppColors.warning; break;
       default: statusColor = AppColors.info;
     }
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10, offset: const Offset(0, 4)),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                DateFormat('dd MMM yyyy, HH:mm').format(order.tanggal),
-                style: const TextStyle(color: AppColors.gray, fontSize: 12),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: statusColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
+    return GestureDetector(
+      onTap: () {
+        Navigator.pushNamed(context, '/orderDetail', arguments: order);
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(15),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10, offset: const Offset(0, 4)),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    DateFormat('dd MMM yyyy, HH:mm').format(order.tanggal),
+                    style: const TextStyle(color: AppColors.gray, fontSize: 12),
+                  ),
                 ),
-                child: Text(
-                  order.status,
-                  style: TextStyle(color: statusColor, fontSize: 10, fontWeight: FontWeight.bold),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: statusColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    order.status,
+                    style: TextStyle(color: statusColor, fontSize: 10, fontWeight: FontWeight.bold),
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const Divider(height: 24),
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(10)),
-                child: const Icon(Icons.receipt_long_rounded, color: AppColors.primary),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Order #${order.id.substring(0, 6).toUpperCase()}', style: const TextStyle(fontWeight: FontWeight.bold)),
-                    Text('${order.items.length} Menu • Meja ${order.mejaId}', style: const TextStyle(color: AppColors.gray, fontSize: 12)),
-                  ],
+              ],
+            ),
+            const Divider(height: 24),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(10)),
+                  child: const Icon(Icons.receipt_long_rounded, color: AppColors.primary),
                 ),
-              ),
-              Text('Rp ${order.totalHarga}', style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary)),
-            ],
-          ),
-          const SizedBox(height: 12),
-          // Short list of items
-          Text(
-            order.items.map((i) => '${i.quantity}x ${i.nama}').join(', '),
-            style: const TextStyle(color: AppColors.gray, fontSize: 11),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Order #${order.id.substring(0, 6).toUpperCase()}', style: const TextStyle(fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
+                      Text('${order.items.length} Menu • $tableName', style: const TextStyle(color: AppColors.gray, fontSize: 12)),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text('Rp ${order.totalHarga}', style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary)),
+              ],
+            ),
+            const SizedBox(height: 12),
+            // Short list of items
+            Text(
+              order.items.map((i) => '${i.quantity}x ${i.nama}').join(', '),
+              style: const TextStyle(color: AppColors.gray, fontSize: 11),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
       ),
     );
   }
