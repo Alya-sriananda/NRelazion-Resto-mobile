@@ -17,6 +17,9 @@ import 'screens/admin/admin_order_screen.dart';
 import 'screens/customer/customer_main_screen.dart';
 import 'screens/customer/customer_menu_detail_screen.dart';
 import 'screens/customer/customer_favorite_screen.dart';
+import 'screens/customer/customer_history_screen.dart';
+import 'screens/kasir/kasir_main_screen.dart';
+import 'screens/shared/order_detail_screen.dart';
 
 import 'providers/auth_provider.dart';
 import 'providers/menu_provider.dart';
@@ -59,6 +62,8 @@ class MyApp extends StatelessWidget {
           AppRoutes.customerMain: (context) => const CustomerMainScreen(),
           AppRoutes.menuDetail: (context) => const CustomerMenuDetailScreen(),
           AppRoutes.favorite: (context) => const CustomerFavoriteScreen(),
+          AppRoutes.history: (context) => const CustomerHistoryScreen(),
+          AppRoutes.orderDetail: (context) => const OrderDetailScreen(),
 
           // Admin
           AppRoutes.adminDashboard: (context) => const AdminDashboardScreen(),
