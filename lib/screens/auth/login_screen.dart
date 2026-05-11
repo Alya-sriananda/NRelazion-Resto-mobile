@@ -41,7 +41,7 @@ class _LoginScreenState extends State<LoginScreen> {
         if (role == 'admin') {
           Navigator.pushReplacementNamed(context, '/adminDashboard');
         } else if (role == 'kasir') {
-          Navigator.pushReplacementNamed(context, '/adminDashboard'); // Placeholder
+          Navigator.pushReplacementNamed(context, '/kasirDashboard');
         } else if (role == 'customer') {
           Navigator.pushReplacementNamed(context, '/customerMain');
         } else {
