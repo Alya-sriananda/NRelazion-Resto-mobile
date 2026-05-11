@@ -49,4 +49,24 @@ class OrderProvider with ChangeNotifier {
       return false;
     }
   }
+
+  Future<bool> addOrder(OrderModel order) async {
+    _isLoading = true;
+    notifyListeners();
+
+    final data = order.toJson();
+    data['action'] = 'addOrder';
+    
+    final response = await _apiService.post(data);
+    
+    if (response['success'] == true) {
+      await fetchOrders();
+      return true;
+    } else {
+      _errorMessage = response['message']?.toString() ?? 'Gagal membuat pesanan';
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
 }
