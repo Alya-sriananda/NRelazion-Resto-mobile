@@ -33,4 +33,5 @@ class AppRoutes {
   static const String adminUser = '/adminUser';
   static const String adminReport = '/adminReport';
   static const String adminSetting = '/adminSetting';
+  static const String editProfile = '/editProfile';
 }

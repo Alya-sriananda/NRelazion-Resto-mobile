@@ -45,7 +45,9 @@ class KasirProfileScreen extends StatelessWidget {
             ),
             const SizedBox(height: 40),
             
-            _buildProfileItem(Icons.edit_rounded, 'Edit Profil', () {}),
+            _buildProfileItem(Icons.edit_rounded, 'Edit Profil', () {
+              Navigator.pushNamed(context, '/editProfile');
+            }),
             _buildProfileItem(Icons.lock_rounded, 'Ubah Password', () {}),
             _buildProfileItem(Icons.info_rounded, 'Tentang Aplikasi', () {}),
             const Divider(height: 32),

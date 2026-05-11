@@ -66,7 +66,9 @@ class CustomerProfileScreen extends StatelessWidget {
               padding: const EdgeInsets.all(20),
               child: Column(
                 children: [
-                  _buildProfileMenuItem(Icons.person_outline_rounded, 'Edit Profil', () {}),
+                  _buildProfileMenuItem(Icons.person_outline_rounded, 'Edit Profil', () {
+                    Navigator.pushNamed(context, '/editProfile');
+                  }),
                   _buildProfileMenuItem(Icons.favorite_outline_rounded, 'Menu Favorit', () {
                     Navigator.pushNamed(context, '/favorite');
                   }),

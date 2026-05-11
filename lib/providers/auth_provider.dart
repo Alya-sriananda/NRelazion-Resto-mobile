@@ -78,6 +78,34 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  Future<bool> updateProfile(UserModel updatedUser) async {
+    _isLoading = true;
+    _errorMessage = '';
+    notifyListeners();
+
+    final data = updatedUser.toJson();
+    data['action'] = 'updateUser';
+
+    final response = await _apiService.post(data);
+
+    if (response['success'] == true) {
+      _currentUser = updatedUser;
+      
+      // Update session
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('user', json.encode(_currentUser!.toJson()));
+      
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } else {
+      _errorMessage = response['message']?.toString() ?? 'Gagal update profil';
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('user');

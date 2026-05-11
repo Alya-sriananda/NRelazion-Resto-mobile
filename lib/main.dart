@@ -20,6 +20,7 @@ import 'screens/customer/customer_favorite_screen.dart';
 import 'screens/customer/customer_history_screen.dart';
 import 'screens/kasir/kasir_main_screen.dart';
 import 'screens/shared/order_detail_screen.dart';
+import 'screens/shared/edit_profile_screen.dart';
 
 import 'providers/auth_provider.dart';
 import 'providers/menu_provider.dart';
@@ -74,6 +75,7 @@ class MyApp extends StatelessWidget {
           AppRoutes.adminMeja: (context) => const AdminMejaScreen(),
           AppRoutes.adminUser: (context) => const AdminUserScreen(),
           AppRoutes.adminReport: (context) => const AdminReportScreen(),
+          AppRoutes.editProfile: (context) => const EditProfileScreen(),
         },
       ),
     );
