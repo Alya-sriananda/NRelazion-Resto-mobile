@@ -61,6 +61,8 @@ function doPost(e) {
     return handleUpdateUser(data);
   } else if (action === 'deleteUser') {
     return handleDeleteUser(data);
+  } else if (action === 'addOrder') {
+    return handleAddOrder(data);
   }
 
   return ContentService.createTextOutput(JSON.stringify({
@@ -375,6 +377,36 @@ function handleDeleteUser(data) {
     }
   }
   return createJsonResponse({success: false, message: "User tidak ditemukan"});
+}
+
+function handleAddOrder(data) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName("Orders");
+  
+  // Buat sheet jika belum ada
+  if (!sheet) {
+    sheet = ss.insertSheet("Orders");
+    sheet.appendRow(["id", "user_id", "kasir_id", "meja_id", "items_json", "total_harga", "status", "metode_bayar", "catatan", "created_at", "updated_at"]);
+  }
+  
+  const id = Utilities.getUuid();
+  const now = new Date().toISOString();
+  
+  sheet.appendRow([
+    id,
+    data.user_id || "",
+    data.kasir_id || "",
+    data.meja_id || "",
+    data.items_json || "[]",
+    data.total_harga || 0,
+    data.status || "Menunggu Konfirmasi",
+    data.metode_bayar || "Cash",
+    data.catatan || "",
+    now, // created_at
+    now  // updated_at
+  ]);
+  
+  return createJsonResponse({success: true, message: "Pesanan berhasil ditambahkan", id: id});
 }
 
 // Utility

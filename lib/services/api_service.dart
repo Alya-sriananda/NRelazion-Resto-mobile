@@ -1,9 +1,10 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter/foundation.dart';
 
 class ApiService {
   // Ganti dengan URL Web App Google Apps Script Anda setelah deploy
-  static const String baseUrl = 'https://script.google.com/macros/s/AKfycbx_8xnqpmcW2EKxscIeTiFwyRZNWRRZD5wjrAone8U9cJsMvagpL7srja4pgD4q4VV6cg/exec';
+  static const String baseUrl = 'https://script.google.com/macros/s/AKfycbyycrjT6ABJAvOxWLiHCFOLJlMJxnB4mpaPNNLSKlg0L68hSPwE4RBFxVKFAd82cfysnw/exec';
 
   // GET requests
   Future<Map<String, dynamic>> get(String action, {Map<String, String>? params}) async {
@@ -14,7 +15,19 @@ class ApiService {
       });
       final response = await http.get(uri);
       
-      if (response.statusCode == 200 || response.statusCode == 302) {
+      // Handle redirects manually
+      if (response.statusCode == 302 || response.statusCode == 301) {
+        final location = response.headers['location'];
+        if (location != null) {
+          final redirectResponse = await http.get(Uri.parse(location));
+          return json.decode(redirectResponse.body);
+        }
+      }
+
+      if (response.statusCode == 200) {
+        if (response.body.trim().startsWith('<')) {
+          return {'success': false, 'message': 'Terjadi kesalahan sistem (HTML Response)'};
+        }
         return json.decode(response.body);
       }
       return {'success': false, 'message': 'HTTP Error: ${response.statusCode}'};
@@ -28,12 +41,26 @@ class ApiService {
     try {
       final response = await http.post(
         Uri.parse(baseUrl),
-        // Use text/plain or drop headers to avoid CORS preflight (OPTIONS) on Flutter Web
-        // headers: {'Content-Type': 'application/json'},
+        headers: kIsWeb 
+          ? {} // Web: No header to avoid CORS preflight
+          : {'Content-Type': 'application/json'}, // Mobile: Proper JSON header
         body: json.encode(data),
       );
       
-      if (response.statusCode == 200 || response.statusCode == 302) {
+      // Handle redirects manually for GAS (especially on Mobile)
+      if (response.statusCode == 302 || response.statusCode == 301) {
+        final location = response.headers['location'];
+        if (location != null) {
+          final redirectResponse = await http.get(Uri.parse(location));
+          return json.decode(redirectResponse.body);
+        }
+      }
+
+      if (response.statusCode == 200) {
+        // Double check if body is HTML (happens if 302 is followed but body is still redirect page)
+        if (response.body.trim().startsWith('<')) {
+          return {'success': false, 'message': 'Terjadi kesalahan sistem (HTML Response)'};
+        }
         return json.decode(response.body);
       }
       return {'success': false, 'message': 'HTTP Error: ${response.statusCode}'};

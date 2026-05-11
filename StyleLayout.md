@@ -1,3 +1,574 @@
+<!-- referensi tampilan pilihan meja -->
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keranjang & Pilih Meja</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f5f2;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            background-color: #fdf6f3;
+            border-radius: 20px;
+            padding: 28px;
+            width: 100%;
+            max-width: 480px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        .header h2 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2c2c2c;
+        }
+        .badge {
+            background-color: #e8e0fc;
+            color: #6b4ee6;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .categories {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+        }
+        .category-btn {
+            padding: 10px 20px;
+            border-radius: 12px;
+            border: 1.5px solid #ddd;
+            background-color: #fff;
+            color: #555;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            min-width: fit-content;
+        }
+        .category-btn:hover {
+            border-color: #6b4ee6;
+            color: #6b4ee6;
+        }
+        .category-btn.active {
+            background-color: #6b4ee6;
+            color: #fff;
+            border-color: #6b4ee6;
+        }
+        .tables-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+            gap: 14px;
+            margin-bottom: 28px;
+        }
+        .table-card {
+            aspect-ratio: 1;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .table-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+        }
+        .table-card.tersedia {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            border-color: #a5d6a7;
+        }
+        .table-card.tersedia:hover {
+            background-color: #c8e6c9;
+        }
+        .table-card.terisi {
+            background-color: #ffebee;
+            color: #c62828;
+            border-color: #ef9a9a;
+            cursor: not-allowed;
+        }
+        .table-card.reserved {
+            background-color: #fff9c4;
+            color: #f57f17;
+            border-color: #fff176;
+            cursor: not-allowed;
+        }
+        .table-card.selected {
+            background-color: #bf360c;
+            color: #fff;
+            border-color: #bf360c;
+            box-shadow: 0 4px 16px rgba(191, 54, 12, 0.3);
+        }
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: #666;
+        }
+        .legend-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 4px;
+        }
+        .summary {
+            background-color: #fff;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 14px;
+            color: #666;
+        }
+        .summary-row.total {
+            font-size: 18px;
+            font-weight: 700;
+            color: #2c2c2c;
+            border-top: 1px dashed #ddd;
+            padding-top: 12px;
+            margin-top: 8px;
+            margin-bottom: 0;
+        }
+        .btn-order {
+            width: 100%;
+            padding: 16px;
+            background-color: #6b4ee6;
+            color: #fff;
+            border: none;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        .btn-order:hover {
+            background-color: #5a3fd1;
+        }
+        .btn-order:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .selected-info {
+            text-align: center;
+            margin-bottom: 16px;
+            font-size: 14px;
+            color: #555;
+            min-height: 20px;
+        }
+        .selected-info span {
+            font-weight: 700;
+            color: #6b4ee6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>Pilih Meja</h2>
+            <span class="badge">Required</span>
+        </div>
+
+        <div class="categories" id="categories">
+            <button class="category-btn active" data-cat="Lesehan">Lesehan</button>
+            <button class="category-btn" data-cat="Garden">Garden</button>
+            <button class="category-btn" data-cat="Area L">Area L</button>
+            <button class="category-btn" data-cat="Atap">Atap</button>
+            <button class="category-btn" data-cat="VIP">VIP</button>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-dot" style="background:#e8f5e9; border:2px solid #a5d6a7;"></div>
+                <span>Tersedia</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot" style="background:#ffebee; border:2px solid #ef9a9a;"></div>
+                <span>Terisi</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot" style="background:#fff9c4; border:2px solid #fff176;"></div>
+                <span>Reserved</span>
+            </div>
+        </div>
+
+        <div class="tables-grid" id="tablesGrid"></div>
+
+        <div class="selected-info" id="selectedInfo">Belum memilih meja</div>
+
+        <div class="summary">
+            <div class="summary-row">
+                <span>Subtotal</span>
+                <span>Rp 125.000</span>
+            </div>
+            <div class="summary-row">
+                <span>PPN (10%)</span>
+                <span>Rp 12.500</span>
+            </div>
+            <div class="summary-row">
+                <span>Service Charge</span>
+                <span>Rp 5.000</span>
+            </div>
+            <div class="summary-row total">
+                <span>Total Pesanan</span>
+                <span>Rp 142.500</span>
+            </div>
+        </div>
+
+        <button class="btn-order" id="btnOrder" disabled>Pesan Sekarang</button>
+    </div>
+
+    <script>
+        // Data meja per kategori
+        const tablesData = {
+            "Lesehan": [
+                { id: 1, status: "tersedia" },
+                { id: 2, status: "terisi" },
+                { id: 3, status: "tersedia" },
+                { id: 4, status: "reserved" },
+                { id: 5, status: "tersedia" },
+                { id: 6, status: "terisi" },
+                { id: 7, status: "tersedia" },
+                { id: 8, status: "tersedia" },
+            ],
+            "Garden": [
+                { id: 1, status: "tersedia" },
+                { id: 2, status: "tersedia" },
+                { id: 3, status: "reserved" },
+                { id: 4, status: "terisi" },
+                { id: 5, status: "tersedia" },
+                { id: 6, status: "tersedia" },
+            ],
+            "Area L": [
+                { id: 1, status: "terisi" },
+                { id: 2, status: "terisi" },
+                { id: 3, status: "tersedia" },
+                { id: 4, status: "tersedia" },
+                { id: 5, status: "reserved" },
+                { id: 6, status: "tersedia" },
+                { id: 7, status: "terisi" },
+                { id: 8, status: "tersedia" },
+                { id: 9, status: "tersedia" },
+                { id: 10, status: "reserved" },
+            ],
+            "Atap": [
+                { id: 1, status: "tersedia" },
+                { id: 2, status: "tersedia" },
+                { id: 3, status: "tersedia" },
+                { id: 4, status: "terisi" },
+                { id: 5, status: "reserved" },
+                { id: 6, status: "tersedia" },
+                { id: 7, status: "tersedia" },
+                { id: 8, status: "terisi" },
+            ],
+            "VIP": [
+                { id: 1, status: "reserved" },
+                { id: 2, status: "tersedia" },
+                { id: 3, status: "terisi" },
+                { id: 4, status: "tersedia" },
+                { id: 5, status: "tersedia" },
+            ]
+        };
+
+        let currentCategory = "Lesehan";
+        let selectedTable = null;
+
+        const categoriesEl = document.getElementById('categories');
+        const tablesGridEl = document.getElementById('tablesGrid');
+        const selectedInfoEl = document.getElementById('selectedInfo');
+        const btnOrder = document.getElementById('btnOrder');
+
+        function renderTables(category) {
+            tablesGridEl.innerHTML = '';
+            const tables = tablesData[category] || [];
+            
+            tables.forEach(table => {
+                const card = document.createElement('div');
+                card.className = `table-card ${table.status}`;
+                card.textContent = table.id;
+                card.dataset.id = table.id;
+                card.dataset.status = table.status;
+                
+                if (table.status === 'tersedia') {
+                    card.addEventListener('click', () => selectTable(table.id, card));
+                }
+                
+                tablesGridEl.appendChild(card);
+            });
+        }
+
+        function selectTable(id, cardEl) {
+            // Remove previous selection
+            document.querySelectorAll('.table-card').forEach(c => {
+                if (c.dataset.status === 'tersedia') {
+                    c.classList.remove('selected');
+                }
+            });
+            
+            // Add selection to clicked card
+            cardEl.classList.add('selected');
+            selectedTable = { category: currentCategory, id: id };
+            
+            selectedInfoEl.innerHTML = `Meja terpilih: <span>${currentCategory} - Meja ${id}</span>`;
+            btnOrder.disabled = false;
+        }
+
+        // Category click handler
+        categoriesEl.addEventListener('click', (e) => {
+            if (e.target.classList.contains('category-btn')) {
+                document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
+                e.target.classList.add('active');
+                currentCategory = e.target.dataset.cat;
+                selectedTable = null;
+                selectedInfoEl.textContent = 'Belum memilih meja';
+                btnOrder.disabled = true;
+                renderTables(currentCategory);
+            }
+        });
+
+        btnOrder.addEventListener('click', () => {
+            if (selectedTable) {
+                alert(`Pesanan dikonfirmasi!\nMeja: ${selectedTable.category} - Meja ${selectedTable.id}`);
+            }
+        });
+
+        // Initial render
+        renderTables(currentCategory);
+    </script>
+</body>
+</html>
+
+<!-- referensi style navigasi dengan bottom bar-->
+<!-- From Uiverse.io by cf2-exe --> 
+<div
+  class="flex justify-center items-center relative transition-all duration-[450ms] ease-in-out w-auto"
+>
+  <article
+    class="border border-solid border-gray-700 w-full ease-in-out duration-500 left-0 rounded-2xl flex shadow-lg shadow-black/15 bg-white"
+  >
+    <label
+      class="has-[:checked]:shadow-lg relative w-full h-16 p-4 ease-in-out duration-300 border-solid border-black/10 has-[:checked]:border group flex flex-row gap-3 items-center justify-center text-black rounded-xl"
+      for="dashboard"
+    >
+      <input
+        id="dashboard"
+        name="path"
+        type="radio"
+        class="hidden peer/expand"
+      />
+      <svg
+        viewBox="0 0 24 24"
+        height="24"
+        width="24"
+        xmlns="http://www.w3.org/2000/svg"
+        class="peer-hover/expand:scale-125 peer-hover/expand:text-blue-400 peer-hover/expand:fill-blue-400 peer-checked/expand:text-blue-400 peer-checked/expand:fill-blue-400 text-2xl peer-checked/expand:scale-125 ease-in-out duration-300"
+      >
+        <path
+          d="M4 13h6a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1zm-1 7a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-4a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v4zm10 0a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-7a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v7zm1-10h6a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1z"
+        ></path>
+      </svg>
+    </label>
+    <label
+      class="has-[:checked]:shadow-lg relative w-full h-16 p-4 ease-in-out duration-300 border-solid border-black/10 has-[:checked]:border group flex flex-row gap-3 items-center justify-center text-black rounded-xl"
+      for="profile"
+    >
+      <input id="profile" name="path" type="radio" class="hidden peer/expand" />
+      <svg
+        viewBox="0 0 24 24"
+        height="24"
+        width="24"
+        xmlns="http://www.w3.org/2000/svg"
+        class="peer-hover/expand:scale-125 peer-hover/expand:text-blue-400 peer-hover/expand:fill-blue-400 peer-checked/expand:text-blue-400 peer-checked/expand:fill-blue-400 text-2xl peer-checked/expand:scale-125 ease-in-out duration-300"
+      >
+        <path
+          d="M12 2a5 5 0 1 0 5 5 5 5 0 0 0-5-5zm0 8a3 3 0 1 1 3-3 3 3 0 0 1-3 3zm9 11v-1a7 7 0 0 0-7-7h-4a7 7 0 0 0-7 7v1h2v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1z"
+        ></path>
+      </svg>
+    </label>
+    <label
+      class="has-[:checked]:shadow-lg relative w-full h-16 p-4 ease-in-out duration-300 border-solid border-black/10 has-[:checked]:border group flex flex-row gap-3 items-center justify-center text-black rounded-xl"
+      for="messages"
+    >
+      <input
+        id="messages"
+        name="path"
+        type="radio"
+        class="hidden peer/expand"
+      />
+      <svg
+        viewBox="0 0 24 24"
+        height="24"
+        width="24"
+        xmlns="http://www.w3.org/2000/svg"
+        class="peer-hover/expand:scale-125 peer-hover/expand:text-blue-400 peer-hover/expand:fill-blue-400 peer-checked/expand:text-blue-400 peer-checked/expand:fill-blue-400 text-2xl peer-checked/expand:scale-125 ease-in-out duration-300"
+      >
+        <path
+          d="M5 18v3.766l1.515-.909L11.277 18H16c1.103 0 2-.897 2-2V8c0-1.103-.897-2-2-2H4c-1.103 0-2 .897-2 2v8c0 1.103.897 2 2 2h1zM4 8h12v8h-5.277L7 18.234V16H4V8z"
+        ></path>
+        <path
+          d="M20 2H8c-1.103 0-2 .897-2 2h12c1.103 0 2 .897 2 2v8c1.103 0 2-.897 2-2V4c0-1.103-.897-2-2-2z"
+        ></path>
+      </svg>
+    </label>
+    <label
+      class="has-[:checked]:shadow-lg relative w-full h-16 p-4 ease-in-out duration-300 border-solid border-black/10 has-[:checked]:border group flex flex-row gap-3 items-center justify-center text-black rounded-xl"
+      for="help"
+    >
+      <input id="help" name="path" type="radio" class="hidden peer/expand" />
+      <svg
+        viewBox="0 0 24 24"
+        height="24"
+        width="24"
+        xmlns="http://www.w3.org/2000/svg"
+        class="peer-hover/expand:scale-125 peer-hover/expand:text-blue-400 peer-hover/expand:fill-blue-400 peer-checked/expand:text-blue-400 peer-checked/expand:fill-blue-400 text-2xl peer-checked/expand:scale-125 ease-in-out duration-300"
+      >
+        <path
+          d="M11.953 2C6.465 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.493 2 11.953 2zM12 20c-4.411 0-8-3.589-8-8s3.567-8 7.953-8C16.391 4 20 7.589 20 12s-3.589 8-8 8z"
+        ></path>
+        <path d="M11 7h2v7h-2zm0 8h2v2h-2z"></path>
+      </svg>
+    </label>
+    <label
+      class="has-[:checked]:shadow-lg relative w-full h-16 p-4 ease-in-out duration-300 border-solid border-black/10 has-[:checked]:border group flex flex-row gap-3 items-center justify-center text-black rounded-xl"
+      for="settings"
+    >
+      <input
+        id="settings"
+        name="path"
+        type="radio"
+        class="hidden peer/expand"
+      />
+      <svg
+        viewBox="0 0 24 24"
+        height="24"
+        width="24"
+        xmlns="http://www.w3.org/2000/svg"
+        class="peer-hover/expand:scale-125 peer-hover/expand:text-blue-400 peer-hover/expand:fill-blue-400 peer-checked/expand:text-blue-400 peer-checked/expand:fill-blue-400 text-2xl peer-checked/expand:scale-125 ease-in-out duration-300"
+      >
+        <path
+          d="M12 16c2.206 0 4-1.794 4-4s-1.794-4-4-4-4 1.794-4 4 1.794 4 4 4zm0-6c1.084 0 2 .916 2 2s-.916 2-2 2-2-.916-2-2 .916-2 2-2z"
+        ></path>
+        <path
+          d="m2.845 16.136 1 1.73c.531.917 1.809 1.261 2.73.73l.529-.306A8.1 8.1 0 0 0 9 19.402V20c0 1.103.897 2 2 2h2c1.103 0 2-.897 2-2v-.598a8.132 8.132 0 0 0 1.896-1.111l.529.306c.923.53 2.198.188 2.731-.731l.999-1.729a2.001 2.001 0 0 0-.731-2.732l-.505-.292a7.718 7.718 0 0 0 0-2.224l.505-.292a2.002 2.002 0 0 0 .731-2.732l-.999-1.729c-.531-.92-1.808-1.265-2.731-.732l-.529.306A8.1 8.1 0 0 0 15 4.598V4c0-1.103-.897-2-2-2h-2c-1.103 0-2 .897-2 2v.598a8.132 8.132 0 0 0-1.896 1.111l-.529-.306c-.924-.531-2.2-.187-2.731.732l-.999 1.729a2.001 2.001 0 0 0 .731 2.732l.505.292a7.683 7.683 0 0 0 0 2.223l-.505.292a2.003 2.003 0 0 0-.731 2.733zm3.326-2.758A5.703 5.703 0 0 1 6 12c0-.462.058-.926.17-1.378a.999.999 0 0 0-.47-1.108l-1.123-.65.998-1.729 1.145.662a.997.997 0 0 0 1.188-.142 6.071 6.071 0 0 1 2.384-1.399A1 1 0 0 0 11 5.3V4h2v1.3a1 1 0 0 0 .708.956 6.083 6.083 0 0 1 2.384 1.399.999.999 0 0 0 1.188.142l1.144-.661 1 1.729-1.124.649a1 1 0 0 0-.47 1.108c.112.452.17.916.17 1.378 0 .461-.058.925-.171 1.378a1 1 0 0 0 .471 1.108l1.123.649-.998 1.729-1.145-.661a.996.996 0 0 0-1.188.142 6.071 6.071 0 0 1-2.384 1.399A1 1 0 0 0 13 18.7l.002 1.3H11v-1.3a1 1 0 0 0-.708-.956 6.083 6.083 0 0 1-2.384-1.399.992.992 0 0 0-1.188-.141l-1.144.662-1-1.729 1.124-.651a1 1 0 0 0 .471-1.108z"
+        ></path>
+      </svg>
+    </label>
+  </article>
+</div>
+
+<!-- Referensi Radio buttom untuk pilihan ukuran Small, Medium, Large pada detail menu -->
+/* From Uiverse.io by Pradeepsaranbishnoi */ 
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.radio-tile-group {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.radio-tile-group .input-container {
+  position: relative;
+  height: 80px;
+  width: 80px;
+  margin: 0.5rem;
+}
+
+.radio-tile-group .input-container .radio-button {
+  opacity: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  cursor: pointer;
+}
+
+.radio-tile-group .input-container .radio-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border: 2px solid #079ad9;
+  border-radius: 5px;
+  padding: 1rem;
+  transition: transform 300ms ease;
+}
+
+.radio-tile-group .input-container .icon svg {
+  fill: #079ad9;
+  width: 2rem;
+  height: 2rem;
+}
+
+.radio-tile-group .input-container .radio-tile-label {
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #079ad9;
+}
+
+.radio-tile-group .input-container .radio-button:checked + .radio-tile {
+  background-color: #079ad9;
+  border: 2px solid #079ad9;
+  color: white;
+  transform: scale(1.1, 1.1);
+}
+
+.radio-tile-group .input-container .radio-button:checked + .radio-tile .icon svg {
+  fill: white;
+  background-color: #079ad9;
+}
+
+.radio-tile-group .input-container .radio-button:checked + .radio-tile .radio-tile-label {
+  color: white;
+  background-color: #079ad9;
+}
+
 <!-- ==================== GUEST MODE ==================== -->
         <section>
             <div class="flex items-center gap-3 mb-8">

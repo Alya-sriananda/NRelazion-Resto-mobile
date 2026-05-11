@@ -7,6 +7,7 @@ class AppRoutes {
   
   // Customer & Guest
   static const String home = '/home';
+  static const String customerMain = '/customerMain';
   static const String menuList = '/menuList';
   static const String menuDetail = '/menuDetail';
   static const String cart = '/cart';
