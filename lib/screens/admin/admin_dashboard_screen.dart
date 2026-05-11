@@ -53,16 +53,18 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       backgroundColor: AppColors.cream,
       appBar: AppBar(
         backgroundColor: Colors.white,
-        iconTheme: const IconThemeData(color: AppColors.dark),
-        title: const Text('Dashboard', style: TextStyle(color: AppColors.dark, fontWeight: FontWeight.bold)),
+        elevation: 0,
+        
+        title: const Text('Dashboard Admin', style: TextStyle(color: AppColors.dark, fontWeight: FontWeight.bold)),
         actions: [
           IconButton(
-            icon: const Icon(Icons.notifications_none, color: AppColors.dark),
-            onPressed: () {},
+            icon: const Icon(Icons.logout_rounded, color: AppColors.accent),
+            onPressed: () {
+              Navigator.pushReplacementNamed(context, '/login');
+            },
           ),
         ],
       ),
-      drawer: const AdminDrawer(),
       body: RefreshIndicator(
         onRefresh: () async {
           await orderProv.fetchOrders();
@@ -105,6 +107,21 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   _buildStatCard('Pesanan Aktif', '$pesananAktif', Icons.receipt_long, AppColors.warning),
                   _buildStatCard('Menu Terjual', '$menuTerjual', Icons.restaurant, AppColors.info),
                   _buildStatCard('Total Menu', '${menuProv.menus.length}', Icons.menu_book, AppColors.primary),
+                ],
+              ),
+              
+              const SizedBox(height: 24),
+              const Text('Aksi Cepat', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(child: _buildQuickActionCard('Kelola Meja', Icons.table_restaurant, Colors.orange, () {
+                    Navigator.pushNamed(context, '/adminMeja');
+                  })),
+                  const SizedBox(width: 16),
+                  Expanded(child: _buildQuickActionCard('Kelola User', Icons.people, Colors.purple, () {
+                    Navigator.pushNamed(context, '/adminUser');
+                  })),
                 ],
               ),
               
@@ -166,6 +183,33 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     );
   }
 
+  Widget _buildQuickActionCard(String title, IconData icon, Color color, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4)),
+          ],
+        ),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle),
+              child: Icon(icon, color: color, size: 24),
+            ),
+            const SizedBox(height: 12),
+            Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildTopMenuCard(String name, String price, String sold, String imgUrl) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -201,66 +245,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           Text(sold, style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 12)),
         ],
       ),
-    );
-  }
-}
-
-class AdminDrawer extends StatelessWidget {
-  const AdminDrawer({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Drawer(
-      backgroundColor: Colors.white,
-      child: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          DrawerHeader(
-            decoration: const BoxDecoration(color: AppColors.primary),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: const [
-                CircleAvatar(backgroundColor: Colors.white, radius: 24, child: Icon(Icons.person, color: AppColors.primary)),
-                SizedBox(height: 12),
-                Text('Admin Resto', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-                Text('admin@nrelazion.com', style: TextStyle(color: Colors.white70, fontSize: 12)),
-              ],
-            ),
-          ),
-          _buildDrawerItem(context, Icons.dashboard, 'Dashboard', '/adminDashboard'),
-          _buildDrawerItem(context, Icons.restaurant_menu, 'Kelola Menu', '/adminMenu'),
-          _buildDrawerItem(context, Icons.table_restaurant, 'Kelola Meja', '/adminMeja'),
-          _buildDrawerItem(context, Icons.receipt_long, 'Kelola Pesanan', '/adminOrder'),
-          _buildDrawerItem(context, Icons.people, 'Kelola User', '/adminUser'),
-          _buildDrawerItem(context, Icons.bar_chart, 'Laporan', '/adminReport'),
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.logout, color: AppColors.accent),
-            title: const Text('Logout', style: TextStyle(color: AppColors.accent)),
-            onTap: () {
-              Navigator.pushReplacementNamed(context, '/login');
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDrawerItem(BuildContext context, IconData icon, String title, String route) {
-    final bool isSelected = ModalRoute.of(context)?.settings.name == route;
-    return ListTile(
-      leading: Icon(icon, color: isSelected ? AppColors.primary : AppColors.gray),
-      title: Text(title, style: TextStyle(color: isSelected ? AppColors.primary : AppColors.dark, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
-      selected: isSelected,
-      selectedTileColor: AppColors.primary.withValues(alpha: 0.05),
-      onTap: () {
-        if (!isSelected) {
-          Navigator.pushReplacementNamed(context, route);
-        } else {
-          Navigator.pop(context);
-        }
-      },
     );
   }
 }

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../constants/app_colors.dart';
 import '../../providers/order_provider.dart';
-import 'admin_dashboard_screen.dart'; // for Drawer
+ // for Drawer
 import 'package:fl_chart/fl_chart.dart'; // Jika ingin menggunakan chart betulan
 
 class AdminReportScreen extends StatefulWidget {
@@ -40,10 +40,10 @@ class _AdminReportScreenState extends State<AdminReportScreen> {
       backgroundColor: AppColors.cream,
       appBar: AppBar(
         backgroundColor: Colors.white,
-        iconTheme: const IconThemeData(color: AppColors.dark),
+        
         title: const Text('Laporan & Statistik', style: TextStyle(color: AppColors.dark, fontWeight: FontWeight.bold)),
       ),
-      drawer: const AdminDrawer(),
+      
       body: RefreshIndicator(
         onRefresh: () => orderProv.fetchOrders(),
         child: SingleChildScrollView(

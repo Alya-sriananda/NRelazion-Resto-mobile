@@ -5,7 +5,7 @@ import '../../providers/order_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../providers/meja_provider.dart';
 import '../../models/order_model.dart';
-import 'admin_dashboard_screen.dart';
+
 
 class AdminOrderScreen extends StatefulWidget {
   const AdminOrderScreen({super.key});
@@ -28,25 +28,27 @@ class _AdminOrderScreenState extends State<AdminOrderScreen> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 3,
+      length: 5,
       child: Scaffold(
         backgroundColor: AppColors.cream,
         appBar: AppBar(
           backgroundColor: Colors.white,
-          iconTheme: const IconThemeData(color: AppColors.dark),
+          elevation: 0,
           title: const Text('Kelola Pesanan', style: TextStyle(color: AppColors.dark, fontWeight: FontWeight.bold)),
           bottom: const TabBar(
+            isScrollable: true,
             labelColor: AppColors.primary,
             unselectedLabelColor: AppColors.gray,
             indicatorColor: AppColors.primary,
             tabs: [
-              Tab(text: 'Aktif'),
+              Tab(text: 'Menunggu'),
+              Tab(text: 'Dikonfirmasi'),
+              Tab(text: 'Diproses'),
+              Tab(text: 'Siap Diambil'),
               Tab(text: 'Selesai'),
-              Tab(text: 'Batal'),
             ],
           ),
         ),
-        drawer: const AdminDrawer(),
         body: Consumer<OrderProvider>(
           builder: (context, provider, child) {
             if (provider.isLoading && provider.orders.isEmpty) {
@@ -56,45 +58,13 @@ class _AdminOrderScreenState extends State<AdminOrderScreen> {
               return Center(child: Text(provider.errorMessage));
             }
 
-            final aktifList = provider.orders.where((o) => o.status.toLowerCase() != 'selesai' && o.status.toLowerCase() != 'batal').toList();
-            final selesaiList = provider.orders.where((o) => o.status.toLowerCase() == 'selesai').toList();
-            final batalList = provider.orders.where((o) => o.status.toLowerCase() == 'batal').toList();
-
             return TabBarView(
               children: [
-                // Aktif
-                RefreshIndicator(
-                  onRefresh: () => provider.fetchOrders(),
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(20),
-                    itemCount: aktifList.length,
-                    itemBuilder: (context, index) {
-                      return _buildOrderCard(aktifList[index], AppColors.warning);
-                    },
-                  ),
-                ),
-                // Selesai
-                RefreshIndicator(
-                  onRefresh: () => provider.fetchOrders(),
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(20),
-                    itemCount: selesaiList.length,
-                    itemBuilder: (context, index) {
-                      return _buildOrderCard(selesaiList[index], AppColors.success);
-                    },
-                  ),
-                ),
-                // Batal
-                RefreshIndicator(
-                  onRefresh: () => provider.fetchOrders(),
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(20),
-                    itemCount: batalList.length,
-                    itemBuilder: (context, index) {
-                      return _buildOrderCard(batalList[index], AppColors.accent);
-                    },
-                  ),
-                ),
+                _buildOrderList(provider, 'menunggu'),
+                _buildOrderList(provider, 'dikonfirmasi'),
+                _buildOrderList(provider, 'diproses'),
+                _buildOrderList(provider, 'siap diambil'),
+                _buildOrderList(provider, 'selesai'),
               ],
             );
           },
@@ -103,7 +73,22 @@ class _AdminOrderScreenState extends State<AdminOrderScreen> {
     );
   }
 
-  Widget _buildOrderCard(OrderModel order, Color statusColor) {
+  Widget _buildOrderList(OrderProvider provider, String status) {
+    final filtered = provider.orders.where((o) => o.status.toLowerCase().trim() == status).toList();
+
+    return RefreshIndicator(
+      onRefresh: () => provider.fetchOrders(),
+      child: filtered.isEmpty
+          ? Center(child: Text('Tidak ada pesanan $status'))
+          : ListView.builder(
+              padding: const EdgeInsets.all(20),
+              itemCount: filtered.length,
+              itemBuilder: (context, index) => _buildOrderCard(filtered[index]),
+            ),
+    );
+  }
+
+  Widget _buildOrderCard(OrderModel order) {
     final userProv = context.watch<UserProvider>();
     final mejaProv = context.watch<MejaProvider>();
 
@@ -116,17 +101,17 @@ class _AdminOrderScreenState extends State<AdminOrderScreen> {
     String tableName = 'Meja ${order.mejaId}';
     try {
       final meja = mejaProv.meja.firstWhere((m) => m.id == order.mejaId);
-      tableName = 'Meja ${meja.nomor}';
+      tableName = '${meja.area} - ${meja.nomor}';
     } catch (_) {}
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(15),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10, offset: const Offset(0, 4)),
         ],
       ),
       child: Column(
@@ -136,19 +121,11 @@ class _AdminOrderScreenState extends State<AdminOrderScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text('#${order.id.substring(0, 6).toUpperCase()}', style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary)),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: statusColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(order.status, style: TextStyle(color: statusColor, fontSize: 10, fontWeight: FontWeight.bold)),
-              ),
+              _buildStatusBadge(order.status),
             ],
           ),
           const Divider(height: 24),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(
                 child: Column(
@@ -163,7 +140,7 @@ class _AdminOrderScreenState extends State<AdminOrderScreen> {
               Text('Rp ${order.totalHarga}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           Row(
             children: [
               Expanded(
@@ -174,21 +151,85 @@ class _AdminOrderScreenState extends State<AdminOrderScreen> {
                   child: const Text('Detail'),
                 ),
               ),
-              if (order.status.toLowerCase() != 'selesai' && order.status.toLowerCase() != 'batal') ...[
-                const SizedBox(width: 8),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      context.read<OrderProvider>().updateOrderStatus(order.id, 'Selesai');
-                    },
-                    child: const Text('Selesaikan'),
-                  ),
-                ),
-              ],
+              const SizedBox(width: 8),
+              _buildActionButton(order),
             ],
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildActionButton(OrderModel order) {
+    String label = '';
+    String nextStatus = '';
+    Color color = AppColors.primary;
+
+    switch (order.status.toLowerCase().trim()) {
+      case 'menunggu':
+        label = 'Konfirmasi';
+        nextStatus = 'Dikonfirmasi';
+        color = Colors.blue;
+        break;
+      case 'dikonfirmasi':
+        label = 'Proses';
+        nextStatus = 'Diproses';
+        color = Colors.orange;
+        break;
+      case 'diproses':
+        label = 'Siap Diambil';
+        nextStatus = 'Siap Diambil';
+        color = Colors.green;
+        break;
+      case 'siap diambil':
+        label = 'Selesaikan';
+        nextStatus = 'Selesai';
+        color = AppColors.success;
+        break;
+      default:
+        return const SizedBox.shrink();
+    }
+
+    return Expanded(
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(backgroundColor: color, foregroundColor: Colors.white),
+        onPressed: () async {
+          _showLoadingDialog(context);
+          final success = await context.read<OrderProvider>().updateOrderStatus(order.id, nextStatus);
+          if (mounted) Navigator.pop(context); // Close loading
+          
+          if (success && mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Status pesanan diperbarui menjadi $nextStatus')));
+          } else if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.read<OrderProvider>().errorMessage)));
+          }
+        },
+        child: Text(label),
+      ),
+    );
+  }
+
+  void _showLoadingDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+  }
+
+  Widget _buildStatusBadge(String status) {
+    final s = status.toLowerCase().trim();
+    Color color;
+    switch (s) {
+      case 'selesai': color = AppColors.success; break;
+      case 'batal': color = AppColors.accent; break;
+      case 'menunggu': color = AppColors.warning; break;
+      default: color = AppColors.info;
+    }
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+      child: Text(status, style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold)),
     );
   }
 }

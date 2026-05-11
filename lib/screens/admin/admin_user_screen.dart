@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../../constants/app_colors.dart';
 import '../../models/user_model.dart';
 import '../../providers/user_provider.dart';
-import 'admin_dashboard_screen.dart';
+
 
 class AdminUserScreen extends StatefulWidget {
   const AdminUserScreen({super.key});
@@ -114,7 +114,7 @@ class _AdminUserScreenState extends State<AdminUserScreen> {
         backgroundColor: AppColors.cream,
         appBar: AppBar(
           backgroundColor: Colors.white,
-          iconTheme: const IconThemeData(color: AppColors.dark),
+          
           title: const Text('Kelola User', style: TextStyle(color: AppColors.dark, fontWeight: FontWeight.bold)),
           bottom: const TabBar(
             labelColor: AppColors.primary,
@@ -132,7 +132,7 @@ class _AdminUserScreenState extends State<AdminUserScreen> {
             ),
           ],
         ),
-        drawer: const AdminDrawer(),
+        
         body: Consumer<UserProvider>(
           builder: (context, provider, child) {
             if (provider.isLoading && provider.users.isEmpty) {

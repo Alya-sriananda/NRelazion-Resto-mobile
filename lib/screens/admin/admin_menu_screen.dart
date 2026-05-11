@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../../constants/app_colors.dart';
 import '../../models/menu_model.dart';
 import '../../providers/menu_provider.dart';
-import 'admin_dashboard_screen.dart'; // for Drawer
+ // for Drawer
 
 class AdminMenuScreen extends StatefulWidget {
   const AdminMenuScreen({super.key});
@@ -29,7 +29,7 @@ class _AdminMenuScreenState extends State<AdminMenuScreen> {
       backgroundColor: AppColors.cream,
       appBar: AppBar(
         backgroundColor: Colors.white,
-        iconTheme: const IconThemeData(color: AppColors.dark),
+        
         title: const Text('Kelola Menu', style: TextStyle(color: AppColors.dark, fontWeight: FontWeight.bold)),
         actions: [
           IconButton(
@@ -40,7 +40,7 @@ class _AdminMenuScreenState extends State<AdminMenuScreen> {
           ),
         ],
       ),
-      drawer: const AdminDrawer(),
+      
       body: Consumer<MenuProvider>(
         builder: (context, provider, child) {
           if (provider.isLoading && provider.menus.isEmpty) {

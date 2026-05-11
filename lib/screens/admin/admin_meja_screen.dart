@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../../constants/app_colors.dart';
 import '../../models/meja_model.dart';
 import '../../providers/meja_provider.dart';
-import 'admin_dashboard_screen.dart'; // for Drawer
+ // for Drawer
 
 class AdminMejaScreen extends StatefulWidget {
   const AdminMejaScreen({super.key});
@@ -101,7 +101,7 @@ class _AdminMejaScreenState extends State<AdminMejaScreen> {
       backgroundColor: AppColors.cream,
       appBar: AppBar(
         backgroundColor: Colors.white,
-        iconTheme: const IconThemeData(color: AppColors.dark),
+        
         title: const Text('Kelola Meja', style: TextStyle(color: AppColors.dark, fontWeight: FontWeight.bold)),
         actions: [
           IconButton(
@@ -110,7 +110,7 @@ class _AdminMejaScreenState extends State<AdminMejaScreen> {
           ),
         ],
       ),
-      drawer: const AdminDrawer(),
+      
       body: Consumer<MejaProvider>(
         builder: (context, provider, child) {
           if (provider.isLoading && provider.meja.isEmpty) {

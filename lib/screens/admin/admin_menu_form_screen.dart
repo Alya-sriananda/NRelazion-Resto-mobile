@@ -89,7 +89,7 @@ class _AdminMenuFormScreenState extends State<AdminMenuFormScreen> {
       backgroundColor: AppColors.cream,
       appBar: AppBar(
         backgroundColor: Colors.white,
-        iconTheme: const IconThemeData(color: AppColors.dark),
+        
         title: Text(isEdit ? 'Edit Menu' : 'Tambah Menu Baru', style: const TextStyle(color: AppColors.dark, fontWeight: FontWeight.bold)),
       ),
       body: SingleChildScrollView(

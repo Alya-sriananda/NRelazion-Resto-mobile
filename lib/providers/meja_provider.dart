@@ -69,6 +69,27 @@ class MejaProvider with ChangeNotifier {
     }
   }
 
+  Future<bool> updateMejaStatus(String mejaId, String status) async {
+    _isLoading = true;
+    notifyListeners();
+
+    final response = await _apiService.post({
+      'action': 'updateMejaStatus',
+      'meja_id': mejaId,
+      'status': status,
+    });
+    
+    if (response['success'] == true) {
+      await fetchMeja();
+      return true;
+    } else {
+      _errorMessage = response['message']?.toString() ?? 'Gagal mengubah status meja';
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
   Future<bool> deleteMeja(String id) async {
     _isLoading = true;
     notifyListeners();

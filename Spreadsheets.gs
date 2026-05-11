@@ -186,7 +186,7 @@ function handleGetOrders(e) {
   
   for (let i = rows.length - 1; i >= 1; i--) { // Reverse order (terbaru di atas)
     const status = rows[i][6];
-    if (statusFilter && status !== statusFilter && statusFilter !== 'semua') continue;
+    if (statusFilter && status.toString().toLowerCase() !== statusFilter.toString().toLowerCase() && statusFilter.toLowerCase() !== 'semua') continue;
     
     orders.push({
       id: rows[i][0],
@@ -210,9 +210,9 @@ function handleUpdateOrderStatus(data) {
   const sheet = ss.getSheetByName("Orders");
   const rows = sheet.getDataRange().getValues();
   
-  for (let i = 1; i < rows.length; i++) {
-    if (rows[i][0] === data.order_id) {
-      sheet.getRange(i + 1, 7).setValue(data.status); // kolom status
+  for (let i = rows.length - 1; i >= 1; i--) {
+    if (String(rows[i][0]) === String(data.order_id)) {
+      sheet.getRange(i + 1, 7).setValue(data.status.trim()); // kolom status
       sheet.getRange(i + 1, 11).setValue(new Date().toISOString()); // kolom updated_at
       return createJsonResponse({success: true, message: "Status pesanan diupdate"});
     }
