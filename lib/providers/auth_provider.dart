@@ -84,4 +84,20 @@ class AuthProvider with ChangeNotifier {
     _currentUser = null;
     notifyListeners();
   }
+
+  Future<bool> tryAutoLogin() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!prefs.containsKey('user')) return false;
+    
+    final userStr = prefs.getString('user');
+    if (userStr == null) return false;
+    
+    try {
+      _currentUser = UserModel.fromJson(json.decode(userStr));
+      notifyListeners();
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
 }
