@@ -176,7 +176,19 @@ class _AdminUserScreenState extends State<AdminUserScreen> {
     );
   }
 
+  String _formatImageUrl(String url) {
+    if (url.contains('drive.google.com')) {
+      final regExp = RegExp(r'\/d\/([^\/]+)\/');
+      final match = regExp.firstMatch(url);
+      if (match != null) {
+        return 'https://drive.google.com/uc?export=view&id=${match.group(1)}';
+      }
+    }
+    return url;
+  }
+
   Widget _buildUserCard(BuildContext context, UserModel user, String role, Color roleColor) {
+    final imageUrl = _formatImageUrl(user.fotoUrl);
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -190,9 +202,18 @@ class _AdminUserScreenState extends State<AdminUserScreen> {
       child: Row(
         children: [
           CircleAvatar(
+            radius: 20,
             backgroundColor: roleColor.withValues(alpha: 0.2),
-            backgroundImage: user.fotoUrl.isNotEmpty ? NetworkImage(user.fotoUrl) : null,
-            child: user.fotoUrl.isEmpty ? Icon(Icons.person, color: roleColor) : null,
+            child: ClipOval(
+              child: user.fotoUrl.isNotEmpty 
+                ? Image.network(
+                    imageUrl,
+                    width: 40, height: 40,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Icon(Icons.person, color: roleColor),
+                  )
+                : Icon(Icons.person, color: roleColor),
+            ),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -248,6 +269,7 @@ class _AdminUserScreenState extends State<AdminUserScreen> {
   }
 
   Widget _buildCustomerCard(UserModel user, String role, Color roleColor) {
+    final imageUrl = _formatImageUrl(user.fotoUrl);
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -261,9 +283,18 @@ class _AdminUserScreenState extends State<AdminUserScreen> {
       child: Row(
         children: [
           CircleAvatar(
+            radius: 20,
             backgroundColor: roleColor.withValues(alpha: 0.2),
-            backgroundImage: user.fotoUrl.isNotEmpty ? NetworkImage(user.fotoUrl) : null,
-            child: user.fotoUrl.isEmpty ? Icon(Icons.person, color: roleColor) : null,
+            child: ClipOval(
+              child: user.fotoUrl.isNotEmpty 
+                ? Image.network(
+                    imageUrl,
+                    width: 40, height: 40,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Icon(Icons.person, color: roleColor),
+                  )
+                : Icon(Icons.person, color: roleColor),
+            ),
           ),
           const SizedBox(width: 16),
           Expanded(

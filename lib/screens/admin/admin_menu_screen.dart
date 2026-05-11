@@ -127,7 +127,19 @@ class _AdminMenuScreenState extends State<AdminMenuScreen> {
     );
   }
 
+  String _formatImageUrl(String url) {
+    if (url.contains('drive.google.com')) {
+      final regExp = RegExp(r'\/d\/([^\/]+)\/');
+      final match = regExp.firstMatch(url);
+      if (match != null) {
+        return 'https://drive.google.com/uc?export=view&id=${match.group(1)}';
+      }
+    }
+    return url;
+  }
+
   Widget _buildMenuCard(BuildContext context, MenuModel menu) {
+    final imageUrl = _formatImageUrl(menu.gambarUrl);
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
@@ -140,14 +152,25 @@ class _AdminMenuScreenState extends State<AdminMenuScreen> {
       ),
       child: Row(
         children: [
-          Container(
-            width: 64, height: 64,
-            decoration: BoxDecoration(
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Container(
+              width: 64, height: 64,
               color: Colors.grey[200],
-              borderRadius: BorderRadius.circular(8),
-              image: menu.gambarUrl.isNotEmpty ? DecorationImage(image: NetworkImage(menu.gambarUrl), fit: BoxFit.cover) : null,
+              child: menu.gambarUrl.isNotEmpty 
+                ? Image.network(
+                    imageUrl,
+                    fit: BoxFit.cover,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return const Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)));
+                    },
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Center(child: Icon(Icons.broken_image, color: Colors.grey, size: 20));
+                    },
+                  )
+                : const Icon(Icons.fastfood, color: Colors.grey),
             ),
-            child: menu.gambarUrl.isEmpty ? const Icon(Icons.fastfood, color: Colors.grey) : null,
           ),
           const SizedBox(width: 12),
           Expanded(
