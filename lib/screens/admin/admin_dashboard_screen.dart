@@ -29,16 +29,25 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     int totalPendapatan = 0;
     int pesananAktif = 0;
     int menuTerjual = 0;
+    Map<String, int> topMenusCount = {};
 
     for (var o in orderProv.orders) {
       if (o.status.toLowerCase() == 'selesai') {
         totalPendapatan += o.totalHarga;
-        // Kita tidak punya detail items untuk menghitung menu terjual secara akurat, jadi pakai estimasi atau dummy
-        menuTerjual += 1; // 1 pesanan = 1 menu terjual sbg estimasi
+        
+        // Parse items to get accurate sold count
+        for (var item in o.items) {
+          menuTerjual += item.quantity;
+          topMenusCount[item.nama] = (topMenusCount[item.nama] ?? 0) + item.quantity;
+        }
       } else if (o.status.toLowerCase() != 'batal') {
         pesananAktif += 1;
       }
     }
+
+    // Sort top menus
+    var sortedTopMenus = topMenusCount.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
 
     return Scaffold(
       backgroundColor: AppColors.cream,
@@ -104,10 +113,24 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               const SizedBox(height: 12),
               
               // Top Menu List
-              if (menuProv.menus.isNotEmpty)
-                ...menuProv.menus.take(3).map((m) => _buildTopMenuCard(m.nama, 'Rp ${m.harga}', '0 terjual', m.gambarUrl))
+              if (sortedTopMenus.isNotEmpty)
+                ...sortedTopMenus.take(5).map((entry) {
+                  final menuName = entry.key;
+                  final soldCount = entry.value;
+                  
+                  // Find menu details from menuProv
+                  String price = '';
+                  String imgUrl = '';
+                  try {
+                    final m = menuProv.menus.firstWhere((m) => m.nama == menuName);
+                    price = 'Rp ${m.harga}';
+                    imgUrl = m.gambarUrl;
+                  } catch (_) {}
+
+                  return _buildTopMenuCard(menuName, price, '$soldCount terjual', imgUrl);
+                })
               else
-                const Text('Belum ada data menu'),
+                const Text('Belum ada data penjualan'),
             ],
           ),
         ),
