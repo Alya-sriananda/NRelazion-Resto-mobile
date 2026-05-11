@@ -40,7 +40,7 @@ class _KasirDashboardScreenState extends State<KasirDashboardScreen> {
       if (status == 'selesai') {
         totalPendapatan += o.totalHarga;
       }
-      if (status == 'menunggu') {
+      if (status == 'menunggu' || status == 'menunggu konfirmasi') {
         pesananMenunggu += 1;
       }
       pesananHariIni += 1;

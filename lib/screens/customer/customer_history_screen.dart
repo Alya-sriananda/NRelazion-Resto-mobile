@@ -75,11 +75,15 @@ class _CustomerHistoryScreenState extends State<CustomerHistoryScreen> {
     } catch (_) {}
 
     Color statusColor;
-    switch (order.status.toLowerCase()) {
-      case 'selesai': statusColor = AppColors.success; break;
-      case 'dibatalkan': case 'batal': statusColor = AppColors.accent; break;
-      case 'diproses': statusColor = AppColors.warning; break;
-      default: statusColor = AppColors.info;
+    final s = order.status.toLowerCase().trim();
+    if (s == 'selesai') {
+      statusColor = AppColors.success;
+    } else if (s == 'batal' || s == 'dibatalkan') {
+      statusColor = AppColors.accent;
+    } else if (s == 'menunggu' || s == 'menunggu konfirmasi') {
+      statusColor = AppColors.warning;
+    } else {
+      statusColor = AppColors.info;
     }
 
     return GestureDetector(

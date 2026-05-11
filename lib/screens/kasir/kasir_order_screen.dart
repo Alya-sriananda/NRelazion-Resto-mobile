@@ -70,12 +70,18 @@ class _KasirOrderScreenState extends State<KasirOrderScreen> {
   }
 
   Widget _buildOrderList(OrderProvider provider, String status) {
-    final filtered = provider.orders.where((o) => o.status.toLowerCase() == status).toList();
+    final filtered = provider.orders.where((o) {
+      final s = o.status.toLowerCase().trim();
+      if (status == 'menunggu') {
+        return s == 'menunggu' || s == 'menunggu konfirmasi';
+      }
+      return s == status;
+    }).toList();
 
     return RefreshIndicator(
       onRefresh: () => provider.fetchOrders(),
       child: filtered.isEmpty
-          ? Center(child: Text('Tidak ada pesanan $status'))
+          ? Center(child: Text('Tidak ada pesanan ${status == 'menunggu' ? 'masuk' : status}'))
           : ListView.builder(
               padding: const EdgeInsets.all(20),
               itemCount: filtered.length,
@@ -161,8 +167,10 @@ class _KasirOrderScreenState extends State<KasirOrderScreen> {
     String nextStatus = '';
     Color color = AppColors.primary;
 
-    switch (order.status.toLowerCase()) {
+    final currentStatus = order.status.toLowerCase().trim();
+    switch (currentStatus) {
       case 'menunggu':
+      case 'menunggu konfirmasi':
         label = 'Konfirmasi';
         nextStatus = 'Dikonfirmasi';
         color = Colors.blue;
