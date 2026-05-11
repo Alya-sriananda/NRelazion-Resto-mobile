@@ -41,16 +41,11 @@ class _LoginScreenState extends State<LoginScreen> {
         if (role == 'admin') {
           Navigator.pushReplacementNamed(context, '/adminDashboard');
         } else if (role == 'kasir') {
-          // TODO: Navigator.pushReplacementNamed(context, '/kasirDashboard');
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Login Berhasil sebagai Kasir')),
-          );
-          Navigator.pushReplacementNamed(context, '/adminDashboard'); // Sementara
+          Navigator.pushReplacementNamed(context, '/adminDashboard'); // Placeholder
+        } else if (role == 'customer') {
+          Navigator.pushReplacementNamed(context, '/customerMain');
         } else {
-          // TODO: Navigator.pushReplacementNamed(context, '/customerHome');
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Login Berhasil sebagai Pelanggan')),
-          );
+          Navigator.pushReplacementNamed(context, '/adminDashboard');
         }
       } else if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
