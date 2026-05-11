@@ -149,18 +149,21 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                 const SizedBox(height: 32),
 
                 // Categories
-                const Row(
+                Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Kategori', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    const Text('Kategori', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    TextButton(onPressed: () {}, child: const Text('Lihat Semua', style: TextStyle(color: AppColors.primary, fontSize: 12))),
                   ],
                 ),
-                const SizedBox(height: 16),
-                // Categories Grid/Wrap to fill screen
-                Wrap(
-                  spacing: 12,
-                  runSpacing: 12,
-                  alignment: WrapAlignment.spaceBetween,
+                const SizedBox(height: 12),
+                GridView.count(
+                  crossAxisCount: 5,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisSpacing: 8,
+                  mainAxisSpacing: 8,
+                  childAspectRatio: 0.75,
                   children: [
                     _buildCategoryItem('Semua', Icons.grid_view_rounded),
                     _buildCategoryItem('Makanan Utama', Icons.restaurant_rounded),
@@ -205,31 +208,28 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
     final isSelected = _selectedCategory == title;
     return GestureDetector(
       onTap: () => setState(() => _selectedCategory = title),
-      child: SizedBox(
-        width: 70,
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: isSelected ? AppColors.primary : Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10, offset: const Offset(0, 4)),
-                ],
-              ),
-              child: Icon(icon, color: isSelected ? Colors.white : AppColors.primary),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isSelected ? AppColors.primary : Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10, offset: const Offset(0, 4)),
+              ],
             ),
-            const SizedBox(height: 8),
-            Text(
-              title, 
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 10, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal, color: isSelected ? AppColors.primary : AppColors.gray),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-        ),
+            child: Icon(icon, color: isSelected ? Colors.white : AppColors.primary),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            title, 
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 10, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal, color: isSelected ? AppColors.primary : AppColors.gray),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
       ),
     );
   }
