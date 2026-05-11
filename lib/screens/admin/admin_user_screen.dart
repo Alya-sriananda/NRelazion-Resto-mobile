@@ -33,51 +33,74 @@ class _AdminUserScreenState extends State<AdminUserScreen> {
     showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: Text(isEdit ? 'Edit Kasir' : 'Tambah Kasir'),
-          content: Form(
-            key: formKey,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextFormField(controller: namaCtrl, decoration: const InputDecoration(labelText: 'Nama'), validator: (v) => v!.isEmpty ? 'Wajib' : null),
-                  const SizedBox(height: 16),
-                  TextFormField(controller: emailCtrl, decoration: const InputDecoration(labelText: 'Email'), validator: (v) => v!.isEmpty ? 'Wajib' : null),
-                  const SizedBox(height: 16),
-                  TextFormField(controller: passCtrl, decoration: InputDecoration(labelText: isEdit ? 'Password Baru (Opsional)' : 'Password'), validator: (v) => !isEdit && v!.isEmpty ? 'Wajib' : null, obscureText: true),
-                  const SizedBox(height: 16),
-                  TextFormField(controller: phoneCtrl, decoration: const InputDecoration(labelText: 'Telepon')),
-                  const SizedBox(height: 16),
-                  TextFormField(controller: fotoCtrl, decoration: const InputDecoration(labelText: 'URL Foto (Opsional)')),
-                ],
+        bool obscurePassword = true;
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text(isEdit ? 'Edit Kasir' : 'Tambah Kasir'),
+              content: Form(
+                key: formKey,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextFormField(controller: namaCtrl, decoration: const InputDecoration(labelText: 'Nama'), validator: (v) => v!.isEmpty ? 'Wajib' : null),
+                      const SizedBox(height: 16),
+                      TextFormField(controller: emailCtrl, decoration: const InputDecoration(labelText: 'Email'), validator: (v) => v!.isEmpty ? 'Wajib' : null),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: passCtrl,
+                        obscureText: obscurePassword,
+                        decoration: InputDecoration(
+                          labelText: isEdit ? 'Password Baru (Opsional)' : 'Password',
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              obscurePassword ? Icons.visibility_off : Icons.visibility,
+                              color: AppColors.gray,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                obscurePassword = !obscurePassword;
+                              });
+                            },
+                          ),
+                        ),
+                        validator: (v) => !isEdit && v!.isEmpty ? 'Wajib' : null,
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(controller: phoneCtrl, decoration: const InputDecoration(labelText: 'Telepon')),
+                      const SizedBox(height: 16),
+                      TextFormField(controller: fotoCtrl, decoration: const InputDecoration(labelText: 'URL Foto (Opsional)')),
+                    ],
+                  ),
+                ),
               ),
-            ),
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Batal')),
-            ElevatedButton(
-              onPressed: () async {
-                if (formKey.currentState!.validate()) {
-                  final newUser = UserModel(
-                    id: isEdit ? user.id : '',
-                    nama: namaCtrl.text,
-                    email: emailCtrl.text,
-                    role: 'kasir',
-                    telepon: phoneCtrl.text,
-                    fotoUrl: fotoCtrl.text,
-                  );
-                  final prov = context.read<UserProvider>();
-                  bool ok = isEdit 
-                    ? await prov.updateUser(newUser, password: passCtrl.text)
-                    : await prov.addUser(newUser, password: passCtrl.text);
-                  if (!context.mounted) return;
-                  if (ok) Navigator.pop(context);
-                }
-              },
-              child: const Text('Simpan'),
-            ),
-          ],
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(context), child: const Text('Batal')),
+                ElevatedButton(
+                  onPressed: () async {
+                    if (formKey.currentState!.validate()) {
+                      final newUser = UserModel(
+                        id: isEdit ? user.id : '',
+                        nama: namaCtrl.text,
+                        email: emailCtrl.text,
+                        role: 'kasir',
+                        telepon: phoneCtrl.text,
+                        fotoUrl: fotoCtrl.text,
+                      );
+                      final prov = context.read<UserProvider>();
+                      bool ok = isEdit 
+                        ? await prov.updateUser(newUser, password: passCtrl.text)
+                        : await prov.addUser(newUser, password: passCtrl.text);
+                      if (!context.mounted) return;
+                      if (ok) Navigator.pop(context);
+                    }
+                  },
+                  child: const Text('Simpan'),
+                ),
+              ],
+            );
+          },
         );
       }
     );

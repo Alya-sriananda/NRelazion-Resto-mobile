@@ -14,6 +14,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  bool _obscurePassword = true;
 
   @override
   void dispose() {
@@ -31,7 +32,12 @@ class _LoginScreenState extends State<LoginScreen> {
       );
 
       if (success && mounted) {
-        final role = authProvider.currentUser?.role.toLowerCase();
+        final user = authProvider.currentUser;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Selamat Datang Kembali, ${user?.nama}')),
+        );
+        
+        final role = user?.role.toLowerCase();
         if (role == 'admin') {
           Navigator.pushReplacementNamed(context, '/adminDashboard');
         } else if (role == 'kasir') {
@@ -100,10 +106,21 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _passwordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(
+                  obscureText: _obscurePassword,
+                  decoration: InputDecoration(
                     labelText: 'Password',
-                    prefixIcon: Icon(Icons.lock_outline),
+                    prefixIcon: const Icon(Icons.lock_outline),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                        color: AppColors.gray,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
+                    ),
                   ),
                   validator: (value) =>
                       value == null || value.isEmpty ? 'Password wajib diisi' : null,
