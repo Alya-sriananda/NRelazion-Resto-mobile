@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../constants/app_colors.dart';
@@ -14,14 +15,32 @@ class KasirDashboardScreen extends StatefulWidget {
 }
 
 class _KasirDashboardScreenState extends State<KasirDashboardScreen> {
+  Timer? _refreshTimer;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<OrderProvider>().fetchOrders();
-      context.read<UserProvider>().fetchUsers();
-      context.read<MejaProvider>().fetchMeja();
+      _fetchInitialData();
     });
+    // Auto refresh every 30 seconds
+    _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (mounted) {
+        context.read<OrderProvider>().fetchOrders();
+      }
+    });
+  }
+
+  void _fetchInitialData() {
+    context.read<OrderProvider>().fetchOrders();
+    context.read<UserProvider>().fetchUsers();
+    context.read<MejaProvider>().fetchMeja();
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
   }
 
   @override
