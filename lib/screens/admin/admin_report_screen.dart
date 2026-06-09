@@ -140,43 +140,77 @@ class _AdminReportScreenState extends State<AdminReportScreen> {
 
   Future<void> _generatePdf(List<OrderModel> filteredOrders, int totalPendapatan) async {
     final pdf = pw.Document();
+    
+    // Theme colors
+    final primaryColor = PdfColor.fromHex('#C08A45'); // AppColors.primary
+    final darkColor = PdfColor.fromHex('#1E1E1E');    // AppColors.dark
 
     pdf.addPage(
-      pw.Page(
+      pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.all(32),
         build: (pw.Context context) {
-          return pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
-            children: [
-              pw.Text('Laporan Pendapatan $_selectedReportType', style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
-              pw.SizedBox(height: 8),
-              pw.Text('Tanggal Cetak: ${DateFormat('dd MMMM yyyy HH:mm').format(DateTime.now())}'),
-              pw.SizedBox(height: 24),
-              pw.Text('Ringkasan', style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
-              pw.SizedBox(height: 8),
-              pw.Text('Total Pesanan Selesai: ${filteredOrders.length}'),
-              pw.Text('Total Pendapatan: Rp $totalPendapatan'),
-              pw.SizedBox(height: 24),
-              pw.Text('Rincian Transaksi', style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
-              pw.SizedBox(height: 8),
-              pw.TableHelper.fromTextArray(
-                headers: ['ID Order', 'Tanggal', 'Status', 'Total Harga'],
-                data: filteredOrders.map((o) => [
+          return [
+            // Header
+            pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: [
+                pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Text('NRelazion Resto', style: pw.TextStyle(fontSize: 28, fontWeight: pw.FontWeight.bold, color: primaryColor)),
+                    pw.SizedBox(height: 4),
+                    pw.Text('Laporan Pendapatan $_selectedReportType', style: pw.TextStyle(fontSize: 16, color: darkColor)),
+                  ],
+                ),
+                pw.Text('Dicetak:\n${DateFormat('dd MMM yyyy, HH:mm').format(DateTime.now())}', style: const pw.TextStyle(fontSize: 10), textAlign: pw.TextAlign.right),
+              ],
+            ),
+            pw.SizedBox(height: 16),
+            pw.Divider(color: primaryColor, thickness: 2),
+            pw.SizedBox(height: 16),
+            
+            // Summary
+            pw.Text('Ringkasan', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold, color: primaryColor)),
+            pw.SizedBox(height: 8),
+            pw.Row(
+              children: [
+                pw.Expanded(child: pw.Text('Total Pesanan Selesai: ${filteredOrders.length}', style: const pw.TextStyle(fontSize: 12))),
+                pw.Expanded(child: pw.Text('Total Pendapatan: Rp $totalPendapatan', style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold))),
+              ]
+            ),
+            pw.SizedBox(height: 24),
+            
+            // Table
+            pw.Text('Rincian Transaksi', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold, color: primaryColor)),
+            pw.SizedBox(height: 12),
+            pw.TableHelper.fromTextArray(
+              headers: ['ID Order', 'Tanggal', 'ID Pelanggan', 'Menu', 'Status', 'Total'],
+              headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.white, fontSize: 10),
+              headerDecoration: pw.BoxDecoration(color: primaryColor),
+              cellStyle: const pw.TextStyle(fontSize: 9),
+              cellAlignment: pw.Alignment.topLeft,
+              data: filteredOrders.map((o) {
+                String menuText = o.items.map((item) => '${item.quantity}x ${item.nama}').join('\n');
+                return [
                   o.id.length > 6 ? o.id.substring(0, 6).toUpperCase() : o.id.toUpperCase(),
-                  DateFormat('dd/MM/yyyy HH:mm').format(o.tanggal),
+                  DateFormat('dd/MM/yy HH:mm').format(o.tanggal),
+                  o.userId.isEmpty ? '-' : (o.userId.length > 6 ? o.userId.substring(0, 6).toUpperCase() : o.userId.toUpperCase()),
+                  menuText,
                   o.status,
                   'Rp ${o.totalHarga}'
-                ]).toList(),
-              ),
-            ],
-          );
+                ];
+              }).toList(),
+            ),
+          ];
         },
       ),
     );
 
-    await Printing.layoutPdf(
-      onLayout: (PdfPageFormat format) async => pdf.save(),
-      name: 'Laporan_$_selectedReportType',
+    // Share / Download PDF
+    await Printing.sharePdf(
+      bytes: await pdf.save(),
+      filename: 'Laporan_$_selectedReportType.pdf',
     );
   }
 
