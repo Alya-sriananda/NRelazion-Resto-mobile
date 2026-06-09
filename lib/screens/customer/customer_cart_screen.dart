@@ -21,6 +21,7 @@ class CustomerCartScreen extends StatefulWidget {
 class _CustomerCartScreenState extends State<CustomerCartScreen> {
   String? _selectedMejaId;
   String _selectedArea = 'Semua';
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -42,6 +43,8 @@ class _CustomerCartScreenState extends State<CustomerCartScreen> {
   }
 
   void _checkout() async {
+    if (_isLoading) return;
+
     final cartProv = context.read<CartProvider>();
     final orderProv = context.read<OrderProvider>();
     final authProv = context.read<AuthProvider>();
@@ -66,17 +69,35 @@ class _CustomerCartScreenState extends State<CustomerCartScreen> {
       totalHarga: cartProv.totalAmount,
     );
 
-    final success = await orderProv.addOrder(newOrder);
-    if (success && mounted) {
-      cartProv.clear();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Pesanan berhasil dibuat!')),
-      );
-      CustomerMainScreen.of(context)?.setSelectedIndex(3); // Go to history
-    } else if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal membuat pesanan: ${orderProv.errorMessage}')),
-      );
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final success = await orderProv.addOrder(newOrder);
+      if (success && mounted) {
+        cartProv.clear();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Pesanan berhasil dibuat!')),
+        );
+        CustomerMainScreen.of(context)?.setSelectedIndex(3); // Go to history
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal membuat pesanan: ${orderProv.errorMessage}')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal membuat pesanan: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -85,58 +106,108 @@ class _CustomerCartScreenState extends State<CustomerCartScreen> {
     final cartProv = context.watch<CartProvider>();
     final mejaProv = context.watch<MejaProvider>();
 
-    return Scaffold(
-      backgroundColor: AppColors.cream,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: const Text('Keranjang Belanja', style: TextStyle(color: AppColors.dark, fontWeight: FontWeight.bold)),
-        actions: [
-          if (cartProv.items.isNotEmpty)
-            IconButton(
-              icon: const Icon(Icons.delete_sweep_rounded, color: AppColors.accent),
-              onPressed: () => _showClearDialog(cartProv),
-            ),
-        ],
-      ),
-      body: cartProv.items.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.shopping_cart_outlined, size: 80, color: AppColors.gray.withValues(alpha: 0.2)),
-                  const SizedBox(height: 16),
-                  const Text('Keranjangmu masih kosong', style: TextStyle(color: AppColors.gray, fontSize: 16)),
-                  const SizedBox(height: 24),
-                  ElevatedButton(
-                    onPressed: () {
-                      CustomerMainScreen.of(context)?.setSelectedIndex(0);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-                    ),
-                    child: const Text('Mulai Belanja', style: TextStyle(fontWeight: FontWeight.bold)),
-                  ),
-                ],
+    return PopScope(
+      canPop: !_isLoading,
+      child: Scaffold(
+        backgroundColor: AppColors.cream,
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          title: const Text('Keranjang Belanja', style: TextStyle(color: AppColors.dark, fontWeight: FontWeight.bold)),
+          actions: [
+            if (cartProv.items.isNotEmpty && !_isLoading)
+              IconButton(
+                icon: const Icon(Icons.delete_sweep_rounded, color: AppColors.accent),
+                onPressed: () => _showClearDialog(cartProv),
               ),
-            )
-          : Column(
-              children: [
-                Expanded(
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(20),
-                    itemCount: cartProv.items.length,
-                    itemBuilder: (context, index) {
-                      final item = cartProv.items[index];
-                      return _buildCartItem(item, cartProv);
-                    },
+          ],
+        ),
+        body: Stack(
+          children: [
+            cartProv.items.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.shopping_cart_outlined, size: 80, color: AppColors.gray.withValues(alpha: 0.2)),
+                        const SizedBox(height: 16),
+                        const Text('Keranjangmu masih kosong', style: TextStyle(color: AppColors.gray, fontSize: 16)),
+                        const SizedBox(height: 24),
+                        ElevatedButton(
+                          onPressed: () {
+                            CustomerMainScreen.of(context)?.setSelectedIndex(0);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                          ),
+                          child: const Text('Mulai Belanja', style: TextStyle(fontWeight: FontWeight.bold)),
+                        ),
+                      ],
+                    ),
+                  )
+                : Column(
+                    children: [
+                      Expanded(
+                        child: ListView.builder(
+                          padding: const EdgeInsets.all(20),
+                          itemCount: cartProv.items.length,
+                          itemBuilder: (context, index) {
+                            final item = cartProv.items[index];
+                            return _buildCartItem(item, cartProv);
+                          },
+                        ),
+                      ),
+                      _buildCheckoutSection(cartProv, mejaProv),
+                    ],
+                  ),
+            if (_isLoading)
+              Positioned.fill(
+                child: GestureDetector(
+                  onTap: () {}, // swallow taps
+                  behavior: HitTestBehavior.opaque,
+                  child: Container(
+                    color: Colors.black.withValues(alpha: 0.5),
+                    child: Center(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.1),
+                              blurRadius: 15,
+                              offset: const Offset(0, 5),
+                            ),
+                          ],
+                        ),
+                        child: const Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                            ),
+                            SizedBox(height: 20),
+                            Text(
+                              'Memproses pesanan...',
+                              style: TextStyle(
+                                color: AppColors.dark,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
                 ),
-                _buildCheckoutSection(cartProv, mejaProv),
-              ],
-            ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -323,9 +394,9 @@ class _CustomerCartScreenState extends State<CustomerCartScreen> {
             width: double.infinity,
             height: 56,
             child: ElevatedButton(
-              onPressed: _checkout,
+              onPressed: _isLoading ? null : _checkout,
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
+                backgroundColor: _isLoading ? Colors.grey : AppColors.primary,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
               ),
               child: const Text('Checkout Sekarang', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
