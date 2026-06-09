@@ -30,15 +30,20 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     int pesananAktif = 0;
     int menuTerjual = 0;
     Map<String, int> topMenusCount = {};
+    
+    DateTime now = DateTime.now();
 
     for (var o in orderProv.orders) {
       if (o.status.toLowerCase() == 'selesai') {
-        totalPendapatan += o.totalHarga;
-        
-        // Parse items to get accurate sold count
-        for (var item in o.items) {
-          menuTerjual += item.quantity;
-          topMenusCount[item.nama] = (topMenusCount[item.nama] ?? 0) + item.quantity;
+        // Filter untuk hari ini
+        if (o.tanggal.year == now.year && o.tanggal.month == now.month && o.tanggal.day == now.day) {
+          totalPendapatan += o.totalHarga;
+          
+          // Parse items to get accurate sold count
+          for (var item in o.items) {
+            menuTerjual += item.quantity;
+            topMenusCount[item.nama] = (topMenusCount[item.nama] ?? 0) + item.quantity;
+          }
         }
       } else if (o.status.toLowerCase() != 'batal') {
         pesananAktif += 1;
@@ -103,7 +108,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 physics: const NeverScrollableScrollPhysics(),
                 childAspectRatio: 1.5,
                 children: [
-                  _buildStatCard('Total Pendapatan', 'Rp $totalPendapatan', Icons.account_balance_wallet, AppColors.success),
+                  _buildStatCard('Pendapatan Hari Ini', 'Rp $totalPendapatan', Icons.account_balance_wallet, AppColors.success),
                   _buildStatCard('Pesanan Aktif', '$pesananAktif', Icons.receipt_long, AppColors.warning),
                   _buildStatCard('Menu Terjual', '$menuTerjual', Icons.restaurant, AppColors.info),
                   _buildStatCard('Total Menu', '${menuProv.menus.length}', Icons.menu_book, AppColors.primary),
