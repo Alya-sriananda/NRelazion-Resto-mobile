@@ -29,7 +29,7 @@ class OrderProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> updateOrderStatus(String orderId, String newStatus) async {
+  Future<bool> updateOrderStatus(String orderId, String newStatus, {String? notes}) async {
     _isLoading = true;
     notifyListeners();
 
@@ -37,6 +37,7 @@ class OrderProvider with ChangeNotifier {
       'action': 'updateOrderStatus',
       'order_id': orderId,
       'status': newStatus,
+      if (notes != null) 'notes': notes,
     });
     
     if (response['success'] == true) {

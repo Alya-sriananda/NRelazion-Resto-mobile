@@ -27,7 +27,7 @@ class _KasirOrderScreenState extends State<KasirOrderScreen> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 5,
+      length: 4,
       child: Scaffold(
         backgroundColor: AppColors.cream,
         appBar: AppBar(
@@ -41,7 +41,6 @@ class _KasirOrderScreenState extends State<KasirOrderScreen> {
             indicatorColor: AppColors.primary,
             tabs: [
               Tab(text: 'Menunggu'),
-              Tab(text: 'Dikonfirmasi'),
               Tab(text: 'Diproses'),
               Tab(text: 'Siap Diambil'),
               Tab(text: 'Selesai'),
@@ -57,7 +56,6 @@ class _KasirOrderScreenState extends State<KasirOrderScreen> {
             return TabBarView(
               children: [
                 _buildOrderList(provider, 'menunggu'),
-                _buildOrderList(provider, 'dikonfirmasi'),
                 _buildOrderList(provider, 'diproses'),
                 _buildOrderList(provider, 'siap diambil'),
                 _buildOrderList(provider, 'selesai'),
@@ -106,58 +104,68 @@ class _KasirOrderScreenState extends State<KasirOrderScreen> {
       tableName = '${meja.area} - ${meja.nomor}';
     } catch (_) {}
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10, offset: const Offset(0, 4)),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('#${order.id.substring(0, 6).toUpperCase()}', style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary)),
-              _buildStatusBadge(order.status),
-            ],
-          ),
-          const Divider(height: 24),
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(userName, style: const TextStyle(fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
-                    Text(tableName, style: const TextStyle(color: AppColors.gray, fontSize: 12)),
-                  ],
+    return GestureDetector(
+      onTap: () {
+        Navigator.pushNamed(context, '/orderDetail', arguments: order);
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(15),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10, offset: const Offset(0, 4)),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('#${order.id.substring(0, 6).toUpperCase()}', style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary)),
+                _buildStatusBadge(order.status),
+              ],
+            ),
+            const Divider(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(userName, style: const TextStyle(fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
+                      Text(tableName, style: const TextStyle(color: AppColors.gray, fontSize: 12)),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Text('Rp ${order.totalHarga}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/orderDetail', arguments: order);
-                  },
-                  child: const Text('Detail'),
-                ),
-              ),
-              const SizedBox(width: 8),
-              _buildActionButton(order),
-            ],
-          ),
-        ],
+                const SizedBox(width: 12),
+                Text('Rp ${order.totalHarga}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                if (order.status.toLowerCase() != 'batal' && order.status.toLowerCase() != 'selesai') ...[
+                  Expanded(
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.accent,
+                        side: const BorderSide(color: AppColors.accent),
+                        padding: const EdgeInsets.symmetric(horizontal: 0),
+                      ),
+                      onPressed: () => _showCancelDialog(context, order),
+                      child: const Text('Batal'),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                _buildActionButton(order),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -171,11 +179,6 @@ class _KasirOrderScreenState extends State<KasirOrderScreen> {
     switch (currentStatus) {
       case 'menunggu':
       case 'menunggu konfirmasi':
-        label = 'Konfirmasi';
-        nextStatus = 'Dikonfirmasi';
-        color = Colors.blue;
-        break;
-      case 'dikonfirmasi':
         label = 'Proses';
         nextStatus = 'Diproses';
         color = Colors.orange;
@@ -210,6 +213,85 @@ class _KasirOrderScreenState extends State<KasirOrderScreen> {
         },
         child: Text(label),
       ),
+    );
+  }
+
+  void _showCancelDialog(BuildContext outerContext, OrderModel order) {
+    final noteController = TextEditingController();
+    bool isRefund = false;
+
+    showDialog(
+      context: outerContext,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Batalkan Pesanan'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Alasan pembatalan:'),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: noteController,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      hintText: 'Contoh: Menu habis',
+                    ),
+                    maxLines: 2,
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Pengembalian Dana (Refund)'),
+                      Switch(
+                        value: isRefund,
+                        activeColor: AppColors.primary,
+                        onChanged: (val) {
+                          setState(() {
+                            isRefund = val;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  child: const Text('Kembali'),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.accent, foregroundColor: Colors.white),
+                  onPressed: () async {
+                    Navigator.pop(dialogContext); // Close dialog
+                    _showLoadingDialog(outerContext);
+                    
+                    String cancelNotes = 'Batal: ${noteController.text.trim().isEmpty ? "-" : noteController.text.trim()} | Refund: ${isRefund ? "Ya" : "Tidak"}';
+
+                    final success = await outerContext.read<OrderProvider>().updateOrderStatus(
+                      order.id, 
+                      'Batal',
+                      notes: cancelNotes,
+                    );
+                    
+                    if (mounted) Navigator.pop(outerContext); // Close loading
+                    if (success && mounted) {
+                      ScaffoldMessenger.of(outerContext).showSnackBar(const SnackBar(content: Text('Pesanan berhasil dibatalkan')));
+                    } else if (mounted) {
+                      ScaffoldMessenger.of(outerContext).showSnackBar(SnackBar(content: Text(outerContext.read<OrderProvider>().errorMessage)));
+                    }
+                  },
+                  child: const Text('Batalkan Pesanan'),
+                ),
+              ],
+            );
+          }
+        );
+      },
     );
   }
 
