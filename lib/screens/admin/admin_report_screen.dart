@@ -9,6 +9,7 @@ import 'package:printing/printing.dart';
 import '../../constants/app_colors.dart';
 import '../../providers/order_provider.dart';
 import '../../models/order_model.dart';
+import '../../utils/format_helper.dart';
 
 class AdminReportScreen extends StatefulWidget {
   const AdminReportScreen({super.key});
@@ -20,6 +21,7 @@ class AdminReportScreen extends StatefulWidget {
 class _AdminReportScreenState extends State<AdminReportScreen> {
   String _selectedReportType = 'Harian'; // Harian, Mingguan, Bulanan, Tahunan
   final DateTime _now = DateTime.now();
+  int _touchedBarIndex = -1;
 
   @override
   void initState() {
@@ -53,56 +55,111 @@ class _AdminReportScreenState extends State<AdminReportScreen> {
   // Generate chart data based on type
   List<BarChartGroupData> _getChartData(List<OrderModel> filteredOrders) {
     if (filteredOrders.isEmpty) {
-      return [BarChartGroupData(x: 0, barRods: [BarChartRodData(toY: 0, color: AppColors.primary, width: 16, borderRadius: BorderRadius.circular(4))])];
+      return [
+        BarChartGroupData(
+          x: 0,
+          barRods: [
+            BarChartRodData(
+              toY: 0,
+              color: AppColors.primary.withValues(alpha: 0.2),
+              width: 10,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(8),
+                topRight: Radius.circular(8),
+              ),
+            ),
+          ],
+        ),
+      ];
     }
 
+    // Prepare raw values
+    List<MapEntry<int, double>> entries = [];
+
     if (_selectedReportType == 'Harian') {
-      // Group by hour
-      Map<int, int> hourlyData = {};
+      Map<int, double> hourlyData = {};
       for (var o in filteredOrders) {
-        hourlyData[o.tanggal.hour] = (hourlyData[o.tanggal.hour] ?? 0) + o.totalHarga;
+        hourlyData[o.tanggal.hour] = (hourlyData[o.tanggal.hour] ?? 0) + o.totalHarga.toDouble();
       }
-      List<BarChartGroupData> result = [];
       var sortedKeys = hourlyData.keys.toList()..sort();
       for (var k in sortedKeys) {
-        result.add(BarChartGroupData(x: k, barRods: [BarChartRodData(toY: hourlyData[k]!.toDouble(), color: AppColors.primary, width: 16, borderRadius: BorderRadius.circular(4))]));
+        entries.add(MapEntry(k, hourlyData[k]!));
       }
-      return result;
     } else if (_selectedReportType == 'Mingguan') {
-      // Group by weekday
-      Map<int, int> dailyData = {};
+      Map<int, double> dailyData = {};
       for (var o in filteredOrders) {
-        dailyData[o.tanggal.weekday] = (dailyData[o.tanggal.weekday] ?? 0) + o.totalHarga;
+        dailyData[o.tanggal.weekday] = (dailyData[o.tanggal.weekday] ?? 0) + o.totalHarga.toDouble();
       }
-      List<BarChartGroupData> result = [];
       for (int i = 1; i <= 7; i++) {
-        result.add(BarChartGroupData(x: i, barRods: [BarChartRodData(toY: (dailyData[i] ?? 0).toDouble(), color: AppColors.primary, width: 16, borderRadius: BorderRadius.circular(4))]));
+        entries.add(MapEntry(i, (dailyData[i] ?? 0).toDouble()));
       }
-      return result;
     } else if (_selectedReportType == 'Bulanan') {
-      // Group by day of month
-      Map<int, int> dailyData = {};
+      Map<int, double> dailyData = {};
       for (var o in filteredOrders) {
-        dailyData[o.tanggal.day] = (dailyData[o.tanggal.day] ?? 0) + o.totalHarga;
+        dailyData[o.tanggal.day] = (dailyData[o.tanggal.day] ?? 0) + o.totalHarga.toDouble();
       }
-      List<BarChartGroupData> result = [];
       var sortedKeys = dailyData.keys.toList()..sort();
       for (var k in sortedKeys) {
-        result.add(BarChartGroupData(x: k, barRods: [BarChartRodData(toY: dailyData[k]!.toDouble(), color: AppColors.primary, width: 16, borderRadius: BorderRadius.circular(4))]));
+        entries.add(MapEntry(k, dailyData[k]!));
       }
-      return result;
-    } else { 
+    } else {
       // Tahunan
-      Map<int, int> monthlyData = {};
+      Map<int, double> monthlyData = {};
       for (var o in filteredOrders) {
-        monthlyData[o.tanggal.month] = (monthlyData[o.tanggal.month] ?? 0) + o.totalHarga;
+        monthlyData[o.tanggal.month] = (monthlyData[o.tanggal.month] ?? 0) + o.totalHarga.toDouble();
       }
-      List<BarChartGroupData> result = [];
       for (int i = 1; i <= 12; i++) {
-        result.add(BarChartGroupData(x: i, barRods: [BarChartRodData(toY: (monthlyData[i] ?? 0).toDouble(), color: AppColors.primary, width: 16, borderRadius: BorderRadius.circular(4))]));
+        entries.add(MapEntry(i, (monthlyData[i] ?? 0).toDouble()));
       }
-      return result;
     }
+
+    // Map to BarChartGroupData with styling
+    List<BarChartGroupData> result = [];
+    for (int i = 0; i < entries.length; i++) {
+      final xVal = entries[i].key;
+      final yVal = entries[i].value;
+
+      bool isTouched = _touchedBarIndex == i;
+      bool isActive = false;
+      if (_selectedReportType == 'Harian') {
+        isActive = xVal == _now.hour;
+      } else if (_selectedReportType == 'Mingguan') {
+        isActive = xVal == _now.weekday;
+      } else if (_selectedReportType == 'Bulanan') {
+        isActive = xVal == _now.day;
+      } else if (_selectedReportType == 'Tahunan') {
+        isActive = xVal == _now.month;
+      }
+
+      double width = 10;
+      Color color = AppColors.primary.withValues(alpha: 0.2);
+
+      if (isTouched) {
+        width = 16;
+        color = AppColors.primary;
+      } else if (isActive) {
+        width = 16;
+        color = AppColors.primaryDark;
+      }
+
+      result.add(
+        BarChartGroupData(
+          x: xVal,
+          barRods: [
+            BarChartRodData(
+              toY: yVal,
+              color: color,
+              width: width,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(8),
+                topRight: Radius.circular(8),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    return result;
   }
   
   double _getMaxY(List<BarChartGroupData> data) {
@@ -275,6 +332,7 @@ class _AdminReportScreenState extends State<AdminReportScreen> {
                     }
                     setState(() {
                       _selectedReportType = type;
+                      _touchedBarIndex = -1;
                     });
                   },
                   type: BottomNavigationBarType.fixed,
@@ -298,7 +356,7 @@ class _AdminReportScreenState extends State<AdminReportScreen> {
                     // Summary Cards
                     Row(
                       children: [
-                        Expanded(child: _buildSummaryCard('Total Pendapatan', 'Rp ${NumberFormat.currency(locale: 'id_ID', symbol: '', decimalDigits: 0).format(totalPendapatan)}', AppColors.success)),
+                        Expanded(child: _buildSummaryCard('Total Pendapatan', FormatHelper.formatRupiah(totalPendapatan), AppColors.success)),
                         const SizedBox(width: 16),
                         Expanded(child: _buildSummaryCard('Total Pesanan', '${filteredOrders.length}', AppColors.primary)),
                       ],
@@ -309,12 +367,13 @@ class _AdminReportScreenState extends State<AdminReportScreen> {
               Container(
                 height: 250,
                 width: double.infinity,
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFFFF7ED)), // light orange border
                   boxShadow: [
-                    BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4)),
+                    BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 15, offset: const Offset(0, 4)),
                   ],
                 ),
                 child: Column(
@@ -327,13 +386,44 @@ class _AdminReportScreenState extends State<AdminReportScreen> {
                         BarChartData(
                           alignment: BarChartAlignment.spaceAround,
                           maxY: maxY,
+                          gridData: FlGridData(
+                            show: true,
+                            drawVerticalLine: false,
+                            horizontalInterval: maxY > 0 ? maxY / 4 : 25000,
+                            getDrawingHorizontalLine: (value) {
+                              return FlLine(
+                                color: Colors.grey[100]!,
+                                strokeWidth: 1,
+                                dashArray: [5, 5],
+                              );
+                            },
+                          ),
                           barTouchData: BarTouchData(
                             enabled: true,
+                            touchCallback: (FlTouchEvent event, barTouchResponse) {
+                              setState(() {
+                                if (!event.isInterestedForInteractions ||
+                                    barTouchResponse == null ||
+                                    barTouchResponse.spot == null) {
+                                  _touchedBarIndex = -1;
+                                  return;
+                                }
+                                _touchedBarIndex = barTouchResponse.spot!.touchedBarGroupIndex;
+                              });
+                            },
                             touchTooltipData: BarTouchTooltipData(
+                              getTooltipColor: (group) => const Color(0xFF374151), // slate-700
+                              tooltipBorderRadius: BorderRadius.circular(8),
+                              tooltipPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              tooltipMargin: 8,
                               getTooltipItem: (group, groupIndex, rod, rodIndex) {
                                 return BarTooltipItem(
-                                  'Rp ${rod.toY.toInt()}',
-                                  const TextStyle(color: Colors.white),
+                                  FormatHelper.formatRupiah(rod.toY.toInt()),
+                                  const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 11,
+                                  ),
                                 );
                               },
                             ),
@@ -344,8 +434,28 @@ class _AdminReportScreenState extends State<AdminReportScreen> {
                               sideTitles: SideTitles(
                                 showTitles: true,
                                 getTitlesWidget: (double value, TitleMeta meta) {
-                                  const style = TextStyle(color: AppColors.gray, fontWeight: FontWeight.bold, fontSize: 10);
-                                  return SideTitleWidget(meta: meta, space: 4, child: Text(_getChartBottomTitle(value), style: style));
+                                  int v = value.toInt();
+                                  bool isActive = false;
+                                  if (_selectedReportType == 'Harian') {
+                                    isActive = v == _now.hour;
+                                  } else if (_selectedReportType == 'Mingguan') {
+                                    isActive = v == _now.weekday;
+                                  } else if (_selectedReportType == 'Bulanan') {
+                                    isActive = v == _now.day;
+                                  } else if (_selectedReportType == 'Tahunan') {
+                                    isActive = v == _now.month;
+                                  }
+
+                                  final style = TextStyle(
+                                    color: isActive ? AppColors.dark : AppColors.gray,
+                                    fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+                                    fontSize: 10,
+                                  );
+                                  return SideTitleWidget(
+                                    meta: meta,
+                                    space: 4,
+                                    child: Text(_getChartBottomTitle(value), style: style),
+                                  );
                                 },
                               ),
                             ),
@@ -354,7 +464,9 @@ class _AdminReportScreenState extends State<AdminReportScreen> {
                                     showTitles: true, 
                                     reservedSize: 40,
                                     getTitlesWidget: (val, meta) {
-                                      if(val == 0) return const SizedBox();
+                                      if (val == 0) {
+                                        return const Text('0', style: TextStyle(color: AppColors.gray, fontSize: 10));
+                                      }
                                       return Text('${(val/1000).toInt()}k', style: const TextStyle(color: AppColors.gray, fontSize: 10));
                                     })),
                             topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
@@ -381,7 +493,7 @@ class _AdminReportScreenState extends State<AdminReportScreen> {
                   return _buildTransactionItem(
                     o.id.length > 6 ? o.id.substring(0, 6).toUpperCase() : o.id.toUpperCase(), 
                     DateFormat('dd MMM yyyy HH:mm').format(o.tanggal), 
-                    'Rp ${NumberFormat.currency(locale: 'id_ID', symbol: '', decimalDigits: 0).format(o.totalHarga)}'
+                    FormatHelper.formatRupiah(o.totalHarga)
                   );
                 }),
             ],
