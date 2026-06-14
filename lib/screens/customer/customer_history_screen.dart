@@ -156,8 +156,64 @@ class _CustomerHistoryScreenState extends State<CustomerHistoryScreen> {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
+            if (order.catatan.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                'Catatan: ${order.catatan}',
+                style: const TextStyle(color: AppColors.accent, fontSize: 11, fontStyle: FontStyle.italic),
+              ),
+            ],
+            if (s == 'menunggu' || s == 'menunggu konfirmasi') ...[
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.accent,
+                    side: const BorderSide(color: AppColors.accent),
+                  ),
+                  onPressed: () => _showCancelDialog(context, order),
+                  child: const Text('Batalkan Pesanan'),
+                ),
+              ),
+            ],
           ],
         ),
+      ),
+    );
+  }
+
+  void _showCancelDialog(BuildContext outerContext, OrderModel order) {
+    showDialog(
+      context: outerContext,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Batalkan Pesanan?'),
+        content: const Text('Apakah Anda yakin ingin membatalkan pesanan ini?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Tidak'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.accent, foregroundColor: Colors.white),
+            onPressed: () async {
+              Navigator.pop(dialogContext); // Close dialog
+              showDialog(
+                context: outerContext,
+                barrierDismissible: false,
+                builder: (context) => const Center(child: CircularProgressIndicator()),
+              );
+              final success = await outerContext.read<OrderProvider>().updateOrderStatus(order.id, 'Batal');
+              if (mounted) Navigator.pop(outerContext); // Close loading
+              if (success && mounted) {
+                ScaffoldMessenger.of(outerContext).showSnackBar(const SnackBar(content: Text('Pesanan berhasil dibatalkan')));
+              } else if (mounted) {
+                ScaffoldMessenger.of(outerContext).showSnackBar(SnackBar(content: Text(outerContext.read<OrderProvider>().errorMessage)));
+              }
+            },
+            child: const Text('Ya, Batalkan'),
+          ),
+        ],
       ),
     );
   }
