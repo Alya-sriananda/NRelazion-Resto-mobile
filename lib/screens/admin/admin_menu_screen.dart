@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../constants/app_colors.dart';
 import '../../models/menu_model.dart';
 import '../../providers/menu_provider.dart';
+import '../../utils/format_helper.dart';
  // for Drawer
 
 class AdminMenuScreen extends StatefulWidget {
@@ -217,7 +218,7 @@ class _AdminMenuScreenState extends State<AdminMenuScreen> {
                   ],
                 ),
                 const SizedBox(height: 4),
-                Text('${menu.kategori} • Rp ${menu.harga}', style: const TextStyle(color: AppColors.gray, fontSize: 12)),
+                Text('${menu.kategori} • ${FormatHelper.formatRupiah(menu.harga)}', style: const TextStyle(color: AppColors.gray, fontSize: 12)),
                 const SizedBox(height: 8),
                 Row(
                   children: [

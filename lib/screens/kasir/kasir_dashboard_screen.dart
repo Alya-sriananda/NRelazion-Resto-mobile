@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../constants/app_colors.dart';
 import '../../providers/order_provider.dart';
+import '../../utils/format_helper.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../providers/meja_provider.dart';
@@ -88,7 +89,7 @@ class _KasirDashboardScreenState extends State<KasirDashboardScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Welcome Text
-              Text('Selamat bekerja,', style: TextStyle(color: AppColors.gray, fontSize: 14)),
+              const Text('Selamat bekerja,', style: TextStyle(color: AppColors.gray, fontSize: 14)),
               Text(user?.nama ?? 'Kasir', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.dark)),
               const SizedBox(height: 24),
 
@@ -96,7 +97,7 @@ class _KasirDashboardScreenState extends State<KasirDashboardScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: _buildStatCard('Pendapatan', 'Rp $totalPendapatan', Icons.payments_rounded, AppColors.success),
+                    child: _buildStatCard('Pendapatan', FormatHelper.formatRupiah(totalPendapatan), Icons.payments_rounded, AppColors.success),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
@@ -208,7 +209,7 @@ class _KasirDashboardScreenState extends State<KasirDashboardScreen> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text('Rp ${order.totalHarga}', style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary)),
+              Text(FormatHelper.formatRupiah(order.totalHarga), style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary)),
               const SizedBox(height: 4),
               _buildSmallStatusBadge(order.status),
             ],

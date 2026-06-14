@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../constants/app_colors.dart';
 import '../../providers/order_provider.dart';
+import '../../utils/format_helper.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/meja_provider.dart';
 import '../../models/order_model.dart';
@@ -145,7 +146,7 @@ class _CustomerHistoryScreenState extends State<CustomerHistoryScreen> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                Text('Rp ${order.totalHarga}', style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary)),
+                Text(FormatHelper.formatRupiah(order.totalHarga), style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary)),
               ],
             ),
             const SizedBox(height: 12),
@@ -204,10 +205,10 @@ class _CustomerHistoryScreenState extends State<CustomerHistoryScreen> {
                 builder: (context) => const Center(child: CircularProgressIndicator()),
               );
               final success = await outerContext.read<OrderProvider>().updateOrderStatus(order.id, 'Batal');
-              if (mounted) Navigator.pop(outerContext); // Close loading
-              if (success && mounted) {
+              if (outerContext.mounted) Navigator.pop(outerContext); // Close loading
+              if (success && outerContext.mounted) {
                 ScaffoldMessenger.of(outerContext).showSnackBar(const SnackBar(content: Text('Pesanan berhasil dibatalkan')));
-              } else if (mounted) {
+              } else if (outerContext.mounted) {
                 ScaffoldMessenger.of(outerContext).showSnackBar(SnackBar(content: Text(outerContext.read<OrderProvider>().errorMessage)));
               }
             },

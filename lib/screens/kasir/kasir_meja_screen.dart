@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../../constants/app_colors.dart';
 import '../../providers/meja_provider.dart';
 import '../../models/meja_model.dart';
+import '../../providers/order_provider.dart';
+import '../../providers/user_provider.dart';
 
 class KasirMejaScreen extends StatefulWidget {
   const KasirMejaScreen({super.key});
@@ -17,6 +19,8 @@ class _KasirMejaScreenState extends State<KasirMejaScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<MejaProvider>().fetchMeja();
+      context.read<OrderProvider>().fetchOrders();
+      context.read<UserProvider>().fetchUsers();
     });
   }
 
@@ -62,7 +66,7 @@ class _KasirMejaScreenState extends State<KasirMejaScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  ...groupedMeja.entries.map((entry) => _buildAreaSection(entry.key, entry.value)),
+                  ...groupedMeja.entries.map((entry) => _buildAreaSection(context, entry.key, entry.value)),
                 ],
               ),
       ),
@@ -79,7 +83,7 @@ class _KasirMejaScreenState extends State<KasirMejaScreen> {
     );
   }
 
-  Widget _buildAreaSection(String area, List<MejaModel> tables) {
+  Widget _buildAreaSection(BuildContext context, String area, List<MejaModel> tables) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -95,20 +99,37 @@ class _KasirMejaScreenState extends State<KasirMejaScreen> {
             childAspectRatio: 1,
           ),
           itemCount: tables.length,
-          itemBuilder: (context, index) => _buildMejaCard(tables[index]),
+          itemBuilder: (context, index) => _buildMejaCard(context, tables[index]),
         ),
         const SizedBox(height: 24),
       ],
     );
   }
 
-  Widget _buildMejaCard(MejaModel meja) {
+  Widget _buildMejaCard(BuildContext context, MejaModel meja) {
     Color color;
     switch (meja.status.toLowerCase()) {
       case 'tersedia': color = Colors.green; break;
       case 'terisi': color = Colors.red; break;
       case 'reserved': color = Colors.orange; break;
       default: color = Colors.grey;
+    }
+
+    String customerName = '';
+    if (meja.status.toLowerCase() != 'tersedia') {
+      try {
+        final orderProv = context.read<OrderProvider>();
+        final userProv = context.read<UserProvider>();
+        
+        final activeOrder = orderProv.orders.firstWhere((o) => 
+          o.mejaId == meja.id && 
+          o.status.toLowerCase() != 'selesai' && 
+          o.status.toLowerCase() != 'batal'
+        );
+        
+        final user = userProv.users.firstWhere((u) => u.id == activeOrder.userId);
+        customerName = user.nama;
+      } catch (_) {}
     }
 
     return GestureDetector(
@@ -124,6 +145,19 @@ class _KasirMejaScreenState extends State<KasirMejaScreen> {
           children: [
             Text(meja.nomor, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: color)),
             Text('Cap: ${meja.kapasitas}', style: TextStyle(fontSize: 10, color: color.withValues(alpha: 0.8))),
+            if (customerName.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Text(
+                  customerName, 
+                  style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: color), 
+                  maxLines: 1, 
+                  overflow: TextOverflow.ellipsis, 
+                  textAlign: TextAlign.center
+                ),
+              ),
+            ],
           ],
         ),
       ),

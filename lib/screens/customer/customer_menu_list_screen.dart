@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../constants/app_colors.dart';
 import '../../providers/menu_provider.dart';
+import '../../utils/format_helper.dart';
 import '../../models/menu_model.dart';
 
 class CustomerMenuListScreen extends StatefulWidget {
@@ -163,7 +164,7 @@ class _CustomerMenuListScreenState extends State<CustomerMenuListScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Rp ${menu.harga}', style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 14)),
+                      Text(FormatHelper.formatRupiah(menu.harga), style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 14)),
                       Container(
                         padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(6)),

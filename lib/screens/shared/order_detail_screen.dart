@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../constants/app_colors.dart';
 import '../../models/order_model.dart';
+import '../../utils/format_helper.dart';
 import '../../providers/meja_provider.dart';
 
 class OrderDetailScreen extends StatelessWidget {
@@ -108,7 +109,7 @@ class OrderDetailScreen extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text('Total Pembayaran', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                      Text('Rp ${order.totalHarga}', style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 18)),
+                      Text(FormatHelper.formatRupiah(order.totalHarga), style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 18)),
                     ],
                   ),
                 ],
@@ -173,7 +174,7 @@ class OrderDetailScreen extends StatelessWidget {
               ],
             ),
           ),
-          Text('Rp ${item.harga * item.quantity}', style: const TextStyle(fontWeight: FontWeight.bold)),
+          Text(FormatHelper.formatRupiah(item.harga * item.quantity), style: const TextStyle(fontWeight: FontWeight.bold)),
         ],
       ),
     );

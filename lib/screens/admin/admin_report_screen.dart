@@ -227,6 +227,15 @@ class _AdminReportScreenState extends State<AdminReportScreen> {
     final chartData = _getChartData(filteredOrders);
     final maxY = _getMaxY(chartData);
 
+    int currentIndex = 0;
+    switch (_selectedReportType) {
+      case 'Mingguan': currentIndex = 1; break;
+      case 'Bulanan': currentIndex = 2; break;
+      case 'Tahunan': currentIndex = 3; break;
+      case 'Harian':
+      default: currentIndex = 0; break;
+    }
+
     return Scaffold(
       backgroundColor: AppColors.cream,
       appBar: AppBar(
@@ -243,59 +252,57 @@ class _AdminReportScreenState extends State<AdminReportScreen> {
       body: RefreshIndicator(
         onRefresh: () => orderProv.fetchOrders(),
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Filter Pilihan Laporan Interaktif
               Container(
-                width: double.infinity,
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey[300]!),
+                  boxShadow: [
+                    BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 5, offset: const Offset(0, 2)),
+                  ],
                 ),
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: ['Harian', 'Mingguan', 'Bulanan', 'Tahunan'].map((type) {
-                      bool isSelected = _selectedReportType == type;
-                      return InkWell(
-                        onTap: () {
-                          setState(() {
-                            _selectedReportType = type;
-                          });
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                          decoration: BoxDecoration(
-                            color: isSelected ? AppColors.primary : Colors.transparent,
-                            borderRadius: BorderRadius.circular(11),
-                          ),
-                          child: Text(
-                            type,
-                            style: TextStyle(
-                              color: isSelected ? Colors.white : AppColors.gray,
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                            ),
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
+                child: BottomNavigationBar(
+                  currentIndex: currentIndex,
+                  onTap: (index) {
+                    String type;
+                    switch (index) {
+                      case 1: type = 'Mingguan'; break;
+                      case 2: type = 'Bulanan'; break;
+                      case 3: type = 'Tahunan'; break;
+                      case 0:
+                      default: type = 'Harian'; break;
+                    }
+                    setState(() {
+                      _selectedReportType = type;
+                    });
+                  },
+                  type: BottomNavigationBarType.fixed,
+                  backgroundColor: Colors.white,
+                  selectedItemColor: AppColors.primary,
+                  unselectedItemColor: AppColors.gray,
+                  selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
+                  items: const [
+                    BottomNavigationBarItem(icon: Icon(Icons.today), label: 'Harian'),
+                    BottomNavigationBarItem(icon: Icon(Icons.view_week), label: 'Mingguan'),
+                    BottomNavigationBarItem(icon: Icon(Icons.calendar_month), label: 'Bulanan'),
+                    BottomNavigationBarItem(icon: Icon(Icons.calendar_today), label: 'Tahunan'),
+                  ],
                 ),
               ),
-              const SizedBox(height: 24),
-              
-              // Summary Cards
-              Row(
-                children: [
-                  Expanded(child: _buildSummaryCard('Total Pendapatan', 'Rp $totalPendapatan', AppColors.success)),
-                  const SizedBox(width: 16),
-                  Expanded(child: _buildSummaryCard('Total Pesanan', '${filteredOrders.length}', AppColors.primary)),
-                ],
-              ),
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Summary Cards
+                    Row(
+                      children: [
+                        Expanded(child: _buildSummaryCard('Total Pendapatan', 'Rp ${NumberFormat.currency(locale: 'id_ID', symbol: '', decimalDigits: 0).format(totalPendapatan)}', AppColors.success)),
+                        const SizedBox(width: 16),
+                        Expanded(child: _buildSummaryCard('Total Pesanan', '${filteredOrders.length}', AppColors.primary)),
+                      ],
+                    ),
               const SizedBox(height: 24),
 
               // Chart Area
@@ -350,8 +357,8 @@ class _AdminReportScreenState extends State<AdminReportScreen> {
                                       if(val == 0) return const SizedBox();
                                       return Text('${(val/1000).toInt()}k', style: const TextStyle(color: AppColors.gray, fontSize: 10));
                                     })),
-                            topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                            rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
                           ),
                           borderData: FlBorderData(show: false),
                           barGroups: chartData,
@@ -374,14 +381,17 @@ class _AdminReportScreenState extends State<AdminReportScreen> {
                   return _buildTransactionItem(
                     o.id.length > 6 ? o.id.substring(0, 6).toUpperCase() : o.id.toUpperCase(), 
                     DateFormat('dd MMM yyyy HH:mm').format(o.tanggal), 
-                    'Rp ${o.totalHarga}'
+                    'Rp ${NumberFormat.currency(locale: 'id_ID', symbol: '', decimalDigits: 0).format(o.totalHarga)}'
                   );
                 }),
             ],
           ),
         ),
-      ),
-    );
+      ],
+    ),
+  ),
+),
+);
   }
 
   Widget _buildSummaryCard(String title, String value, Color color) {

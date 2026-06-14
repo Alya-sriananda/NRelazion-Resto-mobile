@@ -9,6 +9,7 @@ import '../../providers/meja_provider.dart';
 import '../../models/order_model.dart';
 import '../../models/cart_model.dart';
 import '../../models/meja_model.dart';
+import '../../utils/format_helper.dart';
 import 'customer_main_screen.dart';
 
 class CustomerCartScreen extends StatefulWidget {
@@ -76,6 +77,9 @@ class _CustomerCartScreenState extends State<CustomerCartScreen> {
     try {
       final success = await orderProv.addOrder(newOrder);
       if (success && mounted) {
+        // Otomatisasi status meja
+        context.read<MejaProvider>().updateMejaStatus(_selectedMejaId!, 'Terisi');
+
         cartProv.clear();
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Pesanan berhasil dibuat!')),
@@ -266,7 +270,7 @@ class _CustomerCartScreenState extends State<CustomerCartScreen> {
                   Text(item.nama, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                   Text('Level/Ukuran: ${item.size}', style: const TextStyle(color: AppColors.gray, fontSize: 12)),
                   const SizedBox(height: 8),
-                  Text('Rp ${item.harga}', style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
+                  Text(FormatHelper.formatRupiah(item.harga), style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
                 ],
               ),
             ),
@@ -386,7 +390,7 @@ class _CustomerCartScreenState extends State<CustomerCartScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text('Total Pembayaran', style: TextStyle(color: AppColors.gray, fontSize: 14)),
-              Text('Rp ${cartProv.totalAmount}', style: const TextStyle(color: AppColors.primary, fontSize: 20, fontWeight: FontWeight.bold)),
+              Text(FormatHelper.formatRupiah(cartProv.totalAmount), style: const TextStyle(color: AppColors.primary, fontSize: 20, fontWeight: FontWeight.bold)),
             ],
           ),
           const SizedBox(height: 24),

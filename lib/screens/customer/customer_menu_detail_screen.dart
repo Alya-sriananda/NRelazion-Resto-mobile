@@ -4,6 +4,7 @@ import '../../constants/app_colors.dart';
 import '../../models/menu_model.dart';
 import '../../models/cart_model.dart';
 import '../../providers/cart_provider.dart';
+import '../../utils/format_helper.dart';
 import '../../providers/favorite_provider.dart';
 import '../../providers/menu_provider.dart';
 
@@ -149,8 +150,8 @@ class _CustomerMenuDetailScreenState extends State<CustomerMenuDetailScreen> {
                                 ],
                               ),
                             ),
-                            Row(
-                              children: const [
+                            const Row(
+                              children: [
                                 Icon(Icons.star, color: Colors.amber, size: 20),
                                 SizedBox(width: 4),
                                 Text('4.8', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
@@ -207,7 +208,7 @@ class _CustomerMenuDetailScreenState extends State<CustomerMenuDetailScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text('Total Harga', style: TextStyle(color: AppColors.gray, fontSize: 12)),
-                  Text('Rp ${menu.harga * _quantity}', style: const TextStyle(color: AppColors.primary, fontSize: 20, fontWeight: FontWeight.bold)),
+                  Text(FormatHelper.formatRupiah(menu.harga * _quantity), style: const TextStyle(color: AppColors.primary, fontSize: 20, fontWeight: FontWeight.bold)),
                 ],
               ),
               Row(

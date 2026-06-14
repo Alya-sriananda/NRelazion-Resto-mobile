@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../constants/app_colors.dart';
 import '../../providers/order_provider.dart';
+import '../../utils/format_helper.dart';
 import '../../providers/user_provider.dart';
 import '../../providers/meja_provider.dart';
 import '../../models/order_model.dart';
@@ -145,7 +146,7 @@ class _AdminOrderScreenState extends State<AdminOrderScreen> {
                   ),
                 ),
                 const SizedBox(width: 12),
-                Text('Rp ${order.totalHarga}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                Text(FormatHelper.formatRupiah(order.totalHarga), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
               ],
             ),
             const SizedBox(height: 16),
@@ -252,7 +253,7 @@ class _AdminOrderScreenState extends State<AdminOrderScreen> {
                       const Text('Pengembalian Dana (Refund)'),
                       Switch(
                         value: isRefund,
-                        activeColor: AppColors.primary,
+                        activeThumbColor: AppColors.primary,
                         onChanged: (val) {
                           setState(() {
                             isRefund = val;
@@ -282,10 +283,10 @@ class _AdminOrderScreenState extends State<AdminOrderScreen> {
                       notes: cancelNotes,
                     );
                     
-                    if (mounted) Navigator.pop(outerContext); // Close loading
-                    if (success && mounted) {
+                    if (outerContext.mounted) Navigator.pop(outerContext); // Close loading
+                    if (success && outerContext.mounted) {
                       ScaffoldMessenger.of(outerContext).showSnackBar(const SnackBar(content: Text('Pesanan berhasil dibatalkan')));
-                    } else if (mounted) {
+                    } else if (outerContext.mounted) {
                       ScaffoldMessenger.of(outerContext).showSnackBar(SnackBar(content: Text(outerContext.read<OrderProvider>().errorMessage)));
                     }
                   },

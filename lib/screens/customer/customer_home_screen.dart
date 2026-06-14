@@ -4,6 +4,7 @@ import '../../constants/app_colors.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/menu_provider.dart';
 import '../../models/menu_model.dart';
+import '../../utils/format_helper.dart';
 
 class CustomerHomeScreen extends StatefulWidget {
   const CustomerHomeScreen({super.key});
@@ -115,7 +116,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                   width: double.infinity,
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
+                    gradient: const LinearGradient(
                       colors: [AppColors.primary, AppColors.primaryDark],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
@@ -276,13 +277,13 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                 children: [
                   Text(menu.nama, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14), maxLines: 1, overflow: TextOverflow.ellipsis),
                   const SizedBox(height: 4),
-                  Text('Rp ${menu.harga}', style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 12)),
+                  Text(FormatHelper.formatRupiah(menu.harga), style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 12)),
                   const SizedBox(height: 8),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        children: const [
+                      const Row(
+                        children: [
                           Icon(Icons.star, color: Colors.amber, size: 12),
                           SizedBox(width: 4),
                           Text('4.5', style: TextStyle(fontSize: 10, color: AppColors.gray)),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../constants/app_colors.dart';
 import '../../providers/favorite_provider.dart';
+import '../../utils/format_helper.dart';
 import '../../models/menu_model.dart';
 
 class CustomerFavoriteScreen extends StatelessWidget {
@@ -85,7 +86,7 @@ class CustomerFavoriteScreen extends StatelessWidget {
                   Text(menu.nama, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                   Text(menu.kategori, style: const TextStyle(color: AppColors.gray, fontSize: 12)),
                   const SizedBox(height: 8),
-                  Text('Rp ${menu.harga}', style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
+                  Text(FormatHelper.formatRupiah(menu.harga), style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
                 ],
               ),
             ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../constants/app_colors.dart';
 import '../../providers/order_provider.dart';
+import '../../utils/format_helper.dart';
 import '../../providers/menu_provider.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
@@ -108,7 +109,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 physics: const NeverScrollableScrollPhysics(),
                 childAspectRatio: 1.5,
                 children: [
-                  _buildStatCard('Pendapatan Hari Ini', 'Rp $totalPendapatan', Icons.account_balance_wallet, AppColors.success),
+                  _buildStatCard('Pendapatan Hari Ini', FormatHelper.formatRupiah(totalPendapatan), Icons.account_balance_wallet, AppColors.success),
                   _buildStatCard('Pesanan Aktif', '$pesananAktif', Icons.receipt_long, AppColors.warning),
                   _buildStatCard('Menu Terjual', '$menuTerjual', Icons.restaurant, AppColors.info),
                   _buildStatCard('Total Menu', '${menuProv.menus.length}', Icons.menu_book, AppColors.primary),
@@ -145,7 +146,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   String imgUrl = '';
                   try {
                     final m = menuProv.menus.firstWhere((m) => m.nama == menuName);
-                    price = 'Rp ${m.harga}';
+                    price = FormatHelper.formatRupiah(m.harga);
                     imgUrl = m.gambarUrl;
                   } catch (_) {}
 
