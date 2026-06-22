@@ -5,8 +5,10 @@ import '../../providers/order_provider.dart';
 import '../../utils/format_helper.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/meja_provider.dart';
+import '../../providers/cart_provider.dart';
 import '../../models/order_model.dart';
 import 'package:intl/intl.dart';
+import 'customer_main_screen.dart';
 
 class CustomerHistoryScreen extends StatefulWidget {
   const CustomerHistoryScreen({super.key});
@@ -178,10 +180,61 @@ class _CustomerHistoryScreenState extends State<CustomerHistoryScreen> {
                 ),
               ),
             ],
+            if (s == 'selesai' || s == 'batal' || s == 'dibatalkan') ...[
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  icon: const Icon(Icons.shopping_cart_outlined, size: 16),
+                  label: const Text('Beli Lagi'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                  ),
+                  onPressed: () => _buyAgain(order),
+                ),
+              ),
+            ],
           ],
         ),
       ),
     );
+  }
+
+  void _buyAgain(OrderModel order) {
+    if (order.items.isEmpty) return;
+    final cartProv = context.read<CartProvider>();
+    for (final item in order.items) {
+      cartProv.addItem(
+        item.menuId,
+        item.nama,
+        item.harga,
+        '', // gambarUrl tidak tersimpan di order item
+        item.size,
+      );
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.check_circle_rounded, color: Colors.white, size: 18),
+            const SizedBox(width: 8),
+            Text('${order.items.length} item ditambahkan ke keranjang'),
+          ],
+        ),
+        backgroundColor: AppColors.success,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+    CustomerMainScreen.of(context)?.setSelectedIndex(2); // Navigasi ke tab keranjang
   }
 
   void _showCancelDialog(BuildContext outerContext, OrderModel order) {

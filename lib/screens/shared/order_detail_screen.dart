@@ -5,6 +5,8 @@ import '../../constants/app_colors.dart';
 import '../../models/order_model.dart';
 import '../../utils/format_helper.dart';
 import '../../providers/meja_provider.dart';
+import '../../providers/cart_provider.dart';
+import '../../providers/auth_provider.dart';
 
 class OrderDetailScreen extends StatelessWidget {
   const OrderDetailScreen({super.key});
@@ -115,11 +117,76 @@ class OrderDetailScreen extends StatelessWidget {
                 ],
               ),
             ),
+            // Beli Lagi Button (only for completed or cancelled orders)
+            if (['selesai', 'batal', 'dibatalkan'].contains(order.status.toLowerCase().trim())) ...[
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton.icon(
+                  icon: const Icon(Icons.shopping_cart_outlined),
+                  label: const Text('Beli Lagi', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    elevation: 2,
+                    shadowColor: AppColors.primary.withValues(alpha: 0.4),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                  ),
+                  onPressed: () => _buyAgain(context, order),
+                ),
+              ),
+            ],
             const SizedBox(height: 30),
           ],
         ),
       ),
     );
+  }
+
+  void _buyAgain(BuildContext context, OrderModel order) {
+    if (order.items.isEmpty) return;
+    final cartProv = context.read<CartProvider>();
+    final authProv = context.read<AuthProvider>();
+    // Hanya bisa beli lagi jika sudah login
+    if (authProv.currentUser == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Silakan login untuk membeli lagi'),
+          backgroundColor: AppColors.accent,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      );
+      return;
+    }
+    for (final item in order.items) {
+      cartProv.addItem(
+        item.menuId,
+        item.nama,
+        item.harga,
+        '', // gambarUrl tidak tersimpan di order item
+        item.size,
+      );
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.check_circle_rounded, color: Colors.white, size: 18),
+            const SizedBox(width: 8),
+            Text('${order.items.length} item ditambahkan ke keranjang'),
+          ],
+        ),
+        backgroundColor: AppColors.success,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+    Navigator.pop(context); // Kembali ke halaman riwayat
   }
 
   Widget _buildStatusBadge(String status) {
