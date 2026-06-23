@@ -74,6 +74,13 @@ class _KasirDashboardScreenState extends State<KasirDashboardScreen> {
         title: const Text('Kasir Dashboard', style: TextStyle(color: AppColors.dark, fontWeight: FontWeight.bold)),
         actions: [
           IconButton(
+            icon: const Icon(Icons.refresh, color: AppColors.primary),
+            tooltip: 'Refresh Data',
+            onPressed: () {
+              context.read<OrderProvider>().fetchOrders();
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.notifications_none, color: AppColors.dark),
             onPressed: () {},
           ),

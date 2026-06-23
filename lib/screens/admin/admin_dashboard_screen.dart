@@ -64,6 +64,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         title: const Text('Dashboard Admin', style: TextStyle(color: AppColors.dark, fontWeight: FontWeight.bold)),
         actions: [
           IconButton(
+            icon: const Icon(Icons.refresh, color: AppColors.primary),
+            tooltip: 'Refresh Data',
+            onPressed: () {
+              context.read<OrderProvider>().fetchOrders();
+              context.read<MenuProvider>().fetchMenus();
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.logout_rounded, color: AppColors.accent),
             onPressed: () {
               Navigator.pushReplacementNamed(context, '/login');

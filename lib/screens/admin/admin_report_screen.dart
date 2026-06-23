@@ -5,11 +5,13 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import 'dart:typed_data';
 
 import '../../constants/app_colors.dart';
 import '../../providers/order_provider.dart';
 import '../../models/order_model.dart';
 import '../../utils/format_helper.dart';
+import 'pdf_preview_screen.dart';
 
 class AdminReportScreen extends StatefulWidget {
   const AdminReportScreen({super.key});
@@ -20,7 +22,7 @@ class AdminReportScreen extends StatefulWidget {
 
 class _AdminReportScreenState extends State<AdminReportScreen> {
   String _selectedReportType = 'Harian'; // Harian, Mingguan, Bulanan, Tahunan
-  final DateTime _now = DateTime.now();
+  DateTime _selectedDate = DateTime.now();
   int _touchedBarIndex = -1;
 
   @override
@@ -38,14 +40,14 @@ class _AdminReportScreenState extends State<AdminReportScreen> {
       DateTime t = o.tanggal;
       switch (_selectedReportType) {
         case 'Harian':
-          return t.year == _now.year && t.month == _now.month && t.day == _now.day;
+          return t.year == _selectedDate.year && t.month == _selectedDate.month && t.day == _selectedDate.day;
         case 'Mingguan':
           // 7 hari terakhir
-          return t.isAfter(_now.subtract(const Duration(days: 7))) && t.isBefore(_now.add(const Duration(days: 1)));
+          return t.isAfter(_selectedDate.subtract(const Duration(days: 7))) && t.isBefore(_selectedDate.add(const Duration(days: 1)));
         case 'Bulanan':
-          return t.year == _now.year && t.month == _now.month;
+          return t.year == _selectedDate.year && t.month == _selectedDate.month;
         case 'Tahunan':
-          return t.year == _now.year;
+          return t.year == _selectedDate.year;
         default:
           return false;
       }
@@ -122,13 +124,13 @@ class _AdminReportScreenState extends State<AdminReportScreen> {
       bool isTouched = _touchedBarIndex == i;
       bool isActive = false;
       if (_selectedReportType == 'Harian') {
-        isActive = xVal == _now.hour;
+        isActive = xVal == _selectedDate.hour;
       } else if (_selectedReportType == 'Mingguan') {
-        isActive = xVal == _now.weekday;
+        isActive = xVal == _selectedDate.weekday;
       } else if (_selectedReportType == 'Bulanan') {
-        isActive = xVal == _now.day;
+        isActive = xVal == _selectedDate.day;
       } else if (_selectedReportType == 'Tahunan') {
-        isActive = xVal == _now.month;
+        isActive = xVal == _selectedDate.month;
       }
 
       double width = 10;
@@ -195,12 +197,26 @@ class _AdminReportScreenState extends State<AdminReportScreen> {
     }
   }
 
-  Future<void> _generatePdf(List<OrderModel> filteredOrders, int totalPendapatan) async {
+  Future<Uint8List> _generatePdfDocument(List<OrderModel> filteredOrders, int totalPendapatan) async {
     final pdf = pw.Document();
     
     // Theme colors
     final primaryColor = PdfColor.fromHex('#C08A45'); // AppColors.primary
     final darkColor = PdfColor.fromHex('#1E1E1E');    // AppColors.dark
+
+    // Calculate best selling menu
+    Map<String, int> topMenusCount = {};
+    for (var o in filteredOrders) {
+      for (var item in o.items) {
+        topMenusCount[item.nama] = (topMenusCount[item.nama] ?? 0) + item.quantity;
+      }
+    }
+    String menuTerlaris = '-';
+    if (topMenusCount.isNotEmpty) {
+      var sortedTopMenus = topMenusCount.entries.toList()
+        ..sort((a, b) => b.value.compareTo(a.value));
+      menuTerlaris = '${sortedTopMenus.first.key} (${sortedTopMenus.first.value} porsi)';
+    }
 
     pdf.addPage(
       pw.MultiPage(
@@ -236,6 +252,8 @@ class _AdminReportScreenState extends State<AdminReportScreen> {
                 pw.Expanded(child: pw.Text('Total Pendapatan: Rp $totalPendapatan', style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold))),
               ]
             ),
+            pw.SizedBox(height: 4),
+            pw.Text('Menu Terlaris: $menuTerlaris', style: const pw.TextStyle(fontSize: 12)),
             pw.SizedBox(height: 24),
             
             // Table
@@ -264,11 +282,7 @@ class _AdminReportScreenState extends State<AdminReportScreen> {
       ),
     );
 
-    // Share / Download PDF
-    await Printing.sharePdf(
-      bytes: await pdf.save(),
-      filename: 'Laporan_$_selectedReportType.pdf',
-    );
+    return pdf.save();
   }
 
   @override
@@ -301,8 +315,15 @@ class _AdminReportScreenState extends State<AdminReportScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.print, color: AppColors.primary),
-            onPressed: () => _generatePdf(filteredOrders, totalPendapatan),
-            tooltip: 'Cetak PDF',
+            onPressed: () {
+              Navigator.push(context, MaterialPageRoute(
+                builder: (_) => PdfPreviewScreen(
+                  title: 'Laporan $_selectedReportType',
+                  pdfBuilder: () => _generatePdfDocument(filteredOrders, totalPendapatan),
+                ),
+              ));
+            },
+            tooltip: 'Preview & Cetak PDF',
           ),
         ],
       ),
@@ -353,6 +374,34 @@ class _AdminReportScreenState extends State<AdminReportScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Date Picker Row
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Tanggal: ${DateFormat('dd MMM yyyy').format(_selectedDate)}', 
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)
+                        ),
+                        TextButton.icon(
+                          onPressed: () async {
+                            final date = await showDatePicker(
+                              context: context,
+                              initialDate: _selectedDate,
+                              firstDate: DateTime(2000),
+                              lastDate: DateTime.now().add(const Duration(days: 365)),
+                            );
+                            if (date != null) {
+                              setState(() {
+                                _selectedDate = date;
+                              });
+                            }
+                          },
+                          icon: const Icon(Icons.calendar_month),
+                          label: const Text('Pilih Tanggal'),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
                     // Summary Cards
                     Row(
                       children: [
@@ -437,13 +486,13 @@ class _AdminReportScreenState extends State<AdminReportScreen> {
                                   int v = value.toInt();
                                   bool isActive = false;
                                   if (_selectedReportType == 'Harian') {
-                                    isActive = v == _now.hour;
+                                    isActive = v == _selectedDate.hour;
                                   } else if (_selectedReportType == 'Mingguan') {
-                                    isActive = v == _now.weekday;
+                                    isActive = v == _selectedDate.weekday;
                                   } else if (_selectedReportType == 'Bulanan') {
-                                    isActive = v == _now.day;
+                                    isActive = v == _selectedDate.day;
                                   } else if (_selectedReportType == 'Tahunan') {
-                                    isActive = v == _now.month;
+                                    isActive = v == _selectedDate.month;
                                   }
 
                                   final style = TextStyle(
