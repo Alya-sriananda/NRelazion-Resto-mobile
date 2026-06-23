@@ -4,7 +4,7 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     
     <application
-        android:label="NRelazion v0.1"
+        android:label="NRelazion v0.2"
         android:name="${applicationName}"
         android:icon="@mipmap/nrelazion_ic_v01">
         <activity
