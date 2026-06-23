@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 import '../models/order_model.dart';
 import '../services/api_service.dart';
 
@@ -17,12 +19,28 @@ class OrderProvider with ChangeNotifier {
     _errorMessage = '';
     notifyListeners();
 
+    final prefs = await SharedPreferences.getInstance();
+    final cacheKey = 'cached_orders_$status';
+    final cachedOrdersStr = prefs.getString(cacheKey);
+    
+    if (cachedOrdersStr != null) {
+      try {
+        final decoded = json.decode(cachedOrdersStr);
+        _orders = (decoded as List).map((i) => OrderModel.fromJson(i)).toList();
+        _isLoading = false;
+        notifyListeners();
+      } catch (_) {}
+    }
+
     final response = await _apiService.get('getOrders', params: {'status': status});
     
     if (response['success'] == true && response['data'] != null) {
       _orders = (response['data'] as List).map((i) => OrderModel.fromJson(i)).toList();
+      prefs.setString(cacheKey, json.encode(response['data']));
     } else {
-      _errorMessage = response['message']?.toString() ?? 'Gagal memuat pesanan';
+      if (cachedOrdersStr == null) {
+        _errorMessage = response['message']?.toString() ?? 'Gagal memuat pesanan';
+      }
     }
 
     _isLoading = false;

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 import '../models/menu_model.dart';
 import '../services/api_service.dart';
 
@@ -17,12 +19,26 @@ class MenuProvider with ChangeNotifier {
     _errorMessage = '';
     notifyListeners();
 
+    final prefs = await SharedPreferences.getInstance();
+    final cachedMenusStr = prefs.getString('cached_menus');
+    if (cachedMenusStr != null) {
+      try {
+        final decoded = json.decode(cachedMenusStr);
+        _menus = (decoded as List).map((i) => MenuModel.fromJson(i)).toList();
+        _isLoading = false;
+        notifyListeners();
+      } catch (_) {}
+    }
+
     final response = await _apiService.get('getMenu');
     
     if (response['success'] == true && response['data'] != null) {
       _menus = (response['data'] as List).map((i) => MenuModel.fromJson(i)).toList();
+      prefs.setString('cached_menus', json.encode(response['data']));
     } else {
-      _errorMessage = response['message']?.toString() ?? 'Gagal memuat menu';
+      if (cachedMenusStr == null) {
+        _errorMessage = response['message']?.toString() ?? 'Gagal memuat menu';
+      }
     }
 
     _isLoading = false;

@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 
 class ApiService {
   // Ganti dengan URL Web App Google Apps Script Anda setelah deploy
-  static const String baseUrl = 'https://script.google.com/macros/s/AKfycbyycrjT6ABJAvOxWLiHCFOLJlMJxnB4mpaPNNLSKlg0L68hSPwE4RBFxVKFAd82cfysnw/exec';
+  static const String baseUrl = 'https://script.google.com/macros/s/AKfycbwEg_t1vB8PaZ2g6lIUpAWxTzAPOsyO8ADReUsS7V3gFnw_zEbe9yKg699oqOATUoEkRg/exec';
 
   // GET requests
   Future<Map<String, dynamic>> get(String action, {Map<String, String>? params}) async {
